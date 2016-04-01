@@ -1,0 +1,288 @@
+#! /usr/bin/env python
+
+# Purpose:	Reads the output files from Loci-Stream and parses the contents to extract the
+#		particle positions and diameters & averages over time to generate particle
+#		diameter PDF plots.
+#
+#
+# Input: 	Base filename where particle data is stored.
+#
+# Output: 	A data file containing the particle diameter PDF data for the positions and bin widths
+#		specified.
+#
+#		
+#
+#	Author: Christopher Neal
+#	Date   : 11/20/2015
+#	Updated: 02/22/2016
+#
+########################################################################
+
+
+import os #OS specific commands forreading and writing files
+import sys #For parsing user input to the script
+import math
+import numpy as np
+import time #For deubbging
+import matplotlib
+matplotlib.use('Agg')
+
+import matplotlib.pyplot as plt
+from matplotlib import cm
+from matplotlib.ticker import LinearLocator, FormatStrFormatter
+from ParticleStatsModule import *
+from Read_hdf5_particle import *
+from ParticleBinClass import ParticleBinData
+
+#For calling the h5dump shell script
+ShellScriptPath="/home/neal/cases/home/neal/codes/locistream/stream_scripts/ParticleData/particle_PDF_script"
+
+#Pre-allocation for data structure to hold particle PDF data
+MaxNumberOfParcelsInBin = 30000
+MaxNumberOfUniqueDiameters = 2000
+
+ZeroEpsilon = 1e-10
+
+BinFlag = 0 #1 for using diameter bins and 0 for no bins when computing SMD
+
+#Radial Bins Information: There is an implicit assumption that the axis of the jet corresponds to y=0, therefore allowing for the following formula to be used: r = sqrt(y^2 + z^2)
+RadialBinFlag = 1 # 0 for cartesian y bins, 1 for cylindrical R bins. If 1, treat y variable as r in code
+
+#Non-Dimensionalization Parameters
+Dl = 0.0105 #Diameter of liquid injection
+
+#Start & Stop value of particle data file indices
+iStart = 200
+iStep = 200
+iEnd = 2000
+
+#Particle statistics user definition section
+nXBins = 10
+XMin = 0.0
+XMax = 0.10
+
+nYBins = 10
+YMin = 0.0
+YMax = 0.005
+
+#Compute and store data filename numbers
+NumFiles = (iEnd-iStart)/iStep
+FileIndices = []
+iIterate=iStart
+for i in range(0,NumFiles):   #make list of timestamps
+	FileIndices.append(iIterate)
+	iIterate = iIterate + iStep
+print(FileIndices)
+
+#Compute spatial bin width
+dx = (XMax-XMin)/nXBins
+dy = (YMax-YMin)/nYBins
+
+#Compute Bin coordinates
+X_Bin_Coords = np.zeros((2,nXBins)) #Create array of location of X bin coordinates
+Y_Bin_Coords = np.zeros((2,nYBins)) #Create array of location of Y bin coordinates
+
+#Store coordinates of X bin edges
+X_Bin_Coords[0][0] = XMin
+X_Bin_Coords[1][0] = XMin + dx
+for k in range(1,nXBins):
+	X_Bin_Coords[0][k] = X_Bin_Coords[1][k-1]
+        X_Bin_Coords[1][k] = X_Bin_Coords[0][k] + dx
+
+print("X Bin Coordinates are:\n")
+for k in range(0,nXBins):
+	print("Bin %d \t%10.2E\t%10.2E\n"%(k+1,X_Bin_Coords[0][k],X_Bin_Coords[1][k]))
+
+
+#Store coordinates of Y bin edges
+Y_Bin_Coords[0][0] = YMin
+Y_Bin_Coords[1][0] = YMin + dy
+for k in range(1,nYBins):
+        Y_Bin_Coords[0][k] = Y_Bin_Coords[1][k-1]
+        Y_Bin_Coords[1][k] = Y_Bin_Coords[0][k] + dy
+
+print("Y Bin Coordinates are:\n")
+for k in range(0,nYBins):
+        print("Bin %d \t%10.2E\t%10.2E\n"%(k+1,Y_Bin_Coords[0][k],Y_Bin_Coords[1][k]))
+
+
+#Store the casename from the user's input to the script
+CaseName = str(sys.argv[1])
+
+
+PDF_Data = np.zeros((NumFiles,nXBins,nYBins,MaxNumberOfParcelsInBin,3))  #For plotting output at the end
+for i in range(0,NumFiles):
+
+	#Read particle data from HDF5 data files
+	ParticleData=Read_HDF5_Particle_Data(CaseName,FileIndices[i],ShellScriptPath)
+
+	#Compute size of ParticleData 2D list
+	numrows = len(ParticleData)  
+        numcols = len(ParticleData[0])
+
+
+	#Now we have all particle data in the file we now process the data
+	#Allocate a numpy array to store the floating point data & copy into array
+	RealParticleData=np.zeros((numrows,numcols))
+	for k in range(0,numrows):
+		for j in range(0,numcols):
+			RealParticleData[k][j] = float(ParticleData[k][j])
+	
+	#Store particle radius in the y and z positions of the data array
+	if(RadialBinFlag == 1):
+		for k in range(0,numrows):
+			RealParticleData[k][2] = math.sqrt(RealParticleData[k][2]**2 + RealParticleData[k][3]**2)
+			RealParticleData[k][3] = RealParticleData[k][2]
+
+
+	NumParcels = numrows
+
+	#Loop over all bins and store data about particles within the bin
+
+	#Initialize PDF coordinates arrays
+	PDF_X_Coords = np.zeros(nXBins)
+	PDF_Y_Coords = np.zeros(nYBins)
+	for k in range(0,nXBins):
+		PDF_X_Coords[k] =  0.5*( X_Bin_Coords[1][k] + X_Bin_Coords[0][k] )  #Mean of X bin boundaries i.e. middle of X bins
+
+	for k in range(0,nYBins):
+		PDF_Y_Coords[k] =  0.5*( Y_Bin_Coords[1][k] + Y_Bin_Coords[0][k] )  #Mean of Y bin boundaries i.e. middle of Y bins
+
+	#Loop over Y bins & sweep over the X bins & find SMD
+	for m in range(0,nYBins):
+		print("Computing PDF for Y-bin:\t%d.\n"%(m+1))
+
+		for k in range(0,nXBins):
+
+			print("Computing PDF for X-bin %d"%(k+1))
+			Parcels_in_bin=[]
+			Parcels_in_bin.append([])
+			Parcels_in_bin.append([])
+
+			ParcelsInBinCount = 0
+			for j in range(0,NumParcels):  #Loop over all parcels to find which are in the current bin
+				if(RealParticleData[j][1] <= X_Bin_Coords[1][k] and RealParticleData[j][1] >= X_Bin_Coords[0][k] and RealParticleData[j][2] <= Y_Bin_Coords[1][m]   and RealParticleData[j][2] >= Y_Bin_Coords[0][m] ):
+
+                        		Parcels_in_bin[0].append(ParticleData[j][0])  #Append the diameter in string form
+					Parcels_in_bin[1].append(ParticleData[j][4])  #Append the number of particles per parcel in string form
+					ParcelsInBinCount = ParcelsInBinCount + 1
+	
+			RealParcels_in_bin = np.zeros((2,ParcelsInBinCount)) #Allocate array to hold real value of diameters
+		
+			#Copy list data to numpy array
+			for j in range(0,ParcelsInBinCount):
+				RealParcels_in_bin[0][j] = float(Parcels_in_bin[0][j])
+				RealParcels_in_bin[1][j] = float(Parcels_in_bin[1][j])
+
+			print("Number of Parcels in X Bin(%d) & Y Bin(%d) is:\t %d\n"%(k+1,m+1,ParcelsInBinCount))
+		
+			#Generate output data
+			if(ParcelsInBinCount!=0):
+				for z in range(0,ParcelsInBinCount):
+					PDF_Data[i][k][m][z][0]= RealParcels_in_bin[0][z]
+					PDF_Data[i][k][m][z][1]= RealParcels_in_bin[1][z]
+					PDF_Data[i][k][m][z][2] = ParcelsInBinCount
+
+
+#Find how many unique diameters there are in each bin for all time entries
+UniqueDiameterCount = np.zeros(NumFiles)
+UniqueDiameterList = np.zeros((NumFiles,MaxNumberOfUniqueDiameters))
+for i in range(0,NumFiles):
+	for k in range(0,nXBins):
+		for m in range(0,nYBins):
+			for z in range(0,PDF_Data[i][k][m][z][2]):
+				
+				if(z == 0 and PDF_Data[i][k][m][z][0]>=ZeroEpsilon):  #The first diameter in the list
+					UniqueDiameterList[i][UniqueDiameterCount] = PDF_Data[i][k][m][z][0]
+					UniqueDiameterCount[i] = UniqueDiameterCount[i] + 1
+				else: #New diameter is possible, but it may already be in the list
+					
+					if(PDF_Data[i][k][m][z][0]>=ZeroEpsilon):
+						#New non-zero diameter that may or may not already be in the list
+						NewDiameter = True
+						for L in range(0,UniqueDiameterCount[i]):
+							if( abs(UniqueDiameterList[i][L] - PDF_Data[i][k][m][z][0]) >= ZeroEpsilon):
+								#New diameter is to be stored
+								UniqueDiameterList[i][UniqueDiameterCount] = PDF_Data[i][k][m][z][0]
+                        			                UniqueDiameterCount[i] = UniqueDiameterCount[i] + 1
+			
+
+
+print(UniqueDiameterCount)
+
+
+#Compute a time averaged PDF by averaging over all time entries
+
+AVG_PDF_Data=np.zeros((nXBins,nYBins,MaxNumberOfParcelsInBin,2))
+for i in range(0,NumFiles):
+	for j in range(0,nXBins):
+		for k in range(0,nYBins):
+			for z in range(0,MaxNumberOfParcelsInBin):
+				AVG_PDF_Data[j][k][z][0] =  AVG_SMD_Data[j][k] + SMD_Data[i][j][k]
+
+AVG_SMD_Data = AVG_SMD_Data/float(NumFiles)
+
+
+
+#Write the Average SMD to a file of the same basename as the particle data file
+OutputFileName= CaseName + "_SMD" + "_" + str(i) + "." + "dat"
+f_output = open(OutputFileName,"w")
+
+for m in range(0,nYBins):
+        OutputFileName = CaseName + "_SMD_" + '%s_%4.2f_Data'%('Y',SMD_Y_Coords[m]/Dl) + ".txt"
+        f_output = open(OutputFileName,"w")
+
+        for k in range(0,nXBins):
+                f_output.write("%10.6E\t"%(SMD_X_Coords[k]))
+                f_output.write("%10.6E\t"%(AVG_SMD_Data[k][m]))
+                f_output.write("\n\n")
+
+	f_output.close()
+
+
+
+
+#####Plot output data##########
+
+#Create output directory and enter the directory
+FilePathBase =os.getcwd()
+OutPutDir = FilePathBase +"/SMDPlots"
+if not os.path.exists(OutPutDir):
+	os.makedirs(OutPutDir)
+	os.chdir(OutPutDir)
+else:
+	os.chdir(OutPutDir)
+
+
+#Plot SMD variable over space
+DiameterFactor = 1000000
+
+for m in range(0,nYBins):
+
+#Find the maximum value of the variable about to be plotted so that the 
+#plot vertical axis can be scaled appropriately
+	MaxVal = np.amax(AVG_SMD_Data[:,m])*DiameterFactor
+	MinVal = np.amin(AVG_SMD_Data[:,m])*DiameterFactor
+
+	#Change the min and max values a little bit so that all data lies within the bounds of the plots
+	MaxVal = MaxVal + 0.05*abs(MaxVal)
+	MinVal = MinVal - 0.05*abs(MinVal)
+				
+	plt.plot(SMD_X_Coords/Dl,AVG_SMD_Data[:,m]*DiameterFactor, marker='o')
+	plt.xlabel('Non-Dimensional X Coordinate (X/DL)')
+	plt.ylabel('Sauter Mean Diameter D32(micrometers)')
+	plt.ylim([MinVal, MaxVal])
+
+	outputFileName = CaseName + "_SMD_" + '%s%4.2f'%('Y',SMD_Y_Coords[m]/Dl) + ".png"
+	print("Saving a figure to:%s\n"%(outputFileName))
+	plt.savefig(outputFileName, bbox_inches='tight')
+	plt.close()
+
+#Go back to the original data directory
+os.chdir("..")
+
+
+
+print("\n Program has finished... \n")
+
+

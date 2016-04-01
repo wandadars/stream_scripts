@@ -1,0 +1,244 @@
+#! /usr/bin/env python
+
+# Purpose:	Reads in and change the names of the Loci-Stream Ensight Files for use in 
+#		Paraview.
+#
+# Description:  Loci-Stream can output Ensight files, however the case file and filenames of 
+#		the post files are in an incorrect format as well as located in different
+#		directories for Paraview to open all the output files at once. The program 
+#		rectifies this by doing two important steps. 
+#		
+#		Step 1: Search through the output directories of the current working directory
+#			for the output files and change the names of the files to a proper format
+#			"property" => <casename>."property"_"intstep". 
+#			for an explination of intstep see Notes(3)
+#		
+#		Step 2: Build a new case file with the proper syntax so Paraview can open all
+#			the timesteps from just a single case file. 
+
+# Input: 	None.
+
+# Output: 	None.
+#		
+#
+#	Author: Christopher Neal
+#	Date   : 10/11/2015
+#	Updated: 02/17/2016
+#
+########################################################################
+
+#Modules Section
+import os	#for use of reading and writing files
+import glob	#For parsing folder and file contents in directory 
+import time	#For pausing python for debugging
+import shutil	#For Moving files around in directories
+
+
+#Section for choosing whether geometry is changing
+GeomChanging = False	#True means there are individual .geo files for each timestep
+
+#Generate a file that contains all timestamps that were extracted
+FolderNames=[]	#Initialize list to hold all ensight folder names
+
+for name in glob.glob('*_ensight*'):
+	FolderNames.append(name)
+
+NumFolders=len(FolderNames) #Extract the number of solutions
+
+#Extract the casename from the folder names
+CaseName=FolderNames[0].split('_')
+CaseName=CaseName[0]
+
+print("Processing Data for Case: %s\n" %(CaseName) )
+
+#Creat the Final Output Directory
+os.makedirs(CaseName+"_ensight")
+
+PWD=os.getcwd() #Store the current directory
+OutputFolderPath=PWD+"/"+CaseName+"_ensight"
+
+#Trim the entries in FolderNames to just include the timestamp
+time_step=[s.split('.', 1)[-1]for s in FolderNames]
+
+#Sort the timestamp entries
+time_step=[int(x) for x in time_step]
+time_step.sort()
+time_step=[str(x) for x in time_step]
+
+print("Processing Timesteps...\n")
+print(time_step)
+
+#Extract the number of timestamps
+NumTimeSteps=len(time_step)
+
+#Determine the appropriate number of padding zeros
+Max_Zeros=len(str(NumTimeSteps))-1
+
+Max_Number=""
+Wild_Card =""	#For use in Ensight Gold Case File Output Format
+for i in range(0,Max_Zeros+1):
+	Max_Number=Max_Number + "9"
+	Wild_Card=Wild_Card + "*"
+
+#Extract a list of all of the solution variables
+print("Going Into Directory: %s\n"%(PWD+"/"+CaseName+"_ensight."+time_step[0]))
+os.chdir(PWD+"/"+CaseName+"_ensight."+time_step[0])
+
+
+#Storing the filenames that aren't the .case and .geo files i.e. plotting variable file names
+VariableList=set(glob.glob("*")) - set(glob.glob("*.case"))  - set(glob.glob("*.geo"))
+VariableList=list(VariableList)
+
+print("Follow Output Variables Detected:\n")
+for i in range(0,len(VariableList)):
+	print(VariableList[i])
+
+#Rename all solution files to have correct timestamp
+count=0
+for ts in time_step:
+
+	print("Processing Data From Timestep:%d\n"%(count+1))
+
+	os.chdir(PWD+"/"+CaseName+"_ensight."+ts)	#Go into folder
+	
+	#Store current path
+	src=PWD+"/"+CaseName+"_ensight."+ts
+
+	#Determine the appropriate amount of padding zeros
+	ZeroPad = '' # Initialize to no additional padding
+	for K in range(1,Max_Zeros+1):
+		if count <= float(Max_Number[:K]):
+			ZeroPad = ZeroPad + '0'
+
+	#Loop over plotting variable files and copy them to output directory with correct name
+	for variables in VariableList:
+		#Generate new name with correct ENSIGHT GOLD naming convention
+		NewVariableName=variables+"_"+ZeroPad+str(count)
+
+		PathToOriginalFile = os.path.join(src, variables)
+		PathToNewFile      = os.path.join(OutputFolderPath, NewVariableName)
+
+		#Copy file to ouput directory
+		shutil.copy(PathToOriginalFile, PathToNewFile)
+
+	#Also rename any particles files to contain timestamp if they exist
+	OldParticlesName=CaseName + "_particles.geo"
+	if(os.path.isfile(OldParticlesName) == True):
+		NewParticlesName=CaseName + "_particles.geo" + "_" + ZeroPad+str(count)
+
+		PathToOriginalFile = os.path.join(src, OldParticlesName)
+                PathToNewFile      = os.path.join(OutputFolderPath, NewParticlesName)
+
+                #Copy file to ouput directory
+                shutil.copy(PathToOriginalFile, PathToNewFile)
+
+
+	#If geometry changes, then update the geometry file names & move the files
+	if(GeomChanging == True):
+		OldGeometryName=CaseName + ".geo"
+        	if(os.path.isfile(OldGeometryName) == True):
+                	NewGeometryName=CaseName + ".geo" + "_" + ZeroPad+str(count)
+
+			PathToOriginalFile = os.path.join(src, OldGeometryName)
+	                PathToNewFile      = os.path.join(OutputFolderPath, NewGeometryName)
+
+        	        #Copy file to ouput directory
+        	        shutil.copy(PathToOriginalFile, PathToNewFile)
+
+	#Need to move the at least 1 geometry file to output
+	if(count == 0 and GeomChanging == False):  
+		GeometryName=CaseName + ".geo"
+		PathToOriginalFile = os.path.join(src, GeometryName)
+                PathToNewFile      = os.path.join(OutputFolderPath, GeometryName)
+
+                #Copy file to ouput directory
+                shutil.copy(PathToOriginalFile, PathToNewFile)
+
+	#Need to move the at least 1 case file to output
+        if(count == 0 ):                                             
+                CaseFileName=CaseName + ".case"
+                PathToOriginalFile = os.path.join(src, CaseFileName)
+                PathToNewFile      = os.path.join(OutputFolderPath, CaseFileName)
+
+                #Copy file to ouput directory
+                shutil.copy(PathToOriginalFile, PathToNewFile)
+
+
+
+	count = count + 1 #Increment file counter
+	os.chdir("..")
+
+
+#Rebuild the case file so that paraview can open as a multi file transient set
+#The name of the case file that Paraview will recognize is seperated by "."
+case_filename = CaseName+".case"
+
+
+#Go to the final output directory and edit the case file
+os.chdir(OutputFolderPath)       #Go into folder
+
+
+#Update all variable lines to use wildcard representation
+print("Updating Case file Specification")
+tmpFile=open("TempCaseFile",'w+')
+for FileLine in open (case_filename, "r") :
+	FileLine=FileLine.rstrip('\n')	#Strip newline character off end of line
+	FileLine=FileLine.split()
+
+	#Check for any of the variable's names in the line	
+	for StrElement in FileLine:
+		for variables in VariableList:
+			if( variables == StrElement):
+				#replace the last string in line with wildcard String
+				WildCardString=variables+"_"+Wild_Card
+				FileLine[-1]=WildCardString
+
+
+	#Check for particles content->Need to add wildcard name if particles present
+	for StrElement in FileLine:
+		if( StrElement==CaseName+"_particles.geo"):
+			#replace the last string in line with wildcard String
+			WildCardString=CaseName + "_particles.geo" + "_" + Wild_Card
+			FileLine[-1]=WildCardString
+
+	if(GeomChanging == True):
+		if( StrElement==CaseName+".geo"):
+                        #replace the last string in line with wildcard String
+                        WildCardString=CaseName + ".geo" + "_" + Wild_Card
+                        FileLine[-1]=WildCardString
+
+
+	#Write the FileLine back to new temporary file
+	FileLine='\t'.join(FileLine)
+	tmpFile.write(FileLine+'\n')
+
+#Close all open files
+tmpFile.close()
+
+os.rename("TempCaseFile",case_filename)
+
+
+#Write time series data to file
+File=open(case_filename,'a')
+
+File.write("TIME\n")
+File.write('time set:\t1\n')
+File.write('number of steps:\t' + str(len(time_step)) + '\n')
+File.write('filename start number:\t0\n')
+File.write('filename increment:\t1\n')
+File.write('time values:\t\n') 
+
+#After "time values:" the time steps need a numerical name to associate which timestep is what time.
+# Example time step 5.123E-02 can be called time step 0.05123  
+
+#Add the timesteps' numerical names after the line 'time values:' in the case file 
+count = 0
+while count <= (len(time_step)-1):
+	File.write(time_step[count])
+	File.write("\n")
+	count +=1
+
+File.close()
+
+print("\n Program has finished... \n")
+
