@@ -132,7 +132,6 @@ class ParticleBinData:
 		while(FinishedCompression == False):
 	
 			FinishedCompression = True #Initialize to true. Remaining code will control whether it stays true or goes to false
-
 			if(NewCount == 0):
 				NewDiameterList.append( self.ParticleDiameters[NewCount] )
 	                        NewParcelList.append( self.ParticlesPerParcel[NewCount] )
@@ -213,7 +212,6 @@ class ParticleBinData:
 			NewParcelCount.append( str(0) )
 
 		for i in range(0,self.NumElements):
-
 			#Find out which bin the ith diameter belongs in
 			for j in range(0,NumBins):
 				if(self.ParticleDiameters[i] >= UserDiameterBins[0][j] and self.ParticleDiameters[i] < UserDiameterBins[1][j]):
@@ -228,7 +226,6 @@ class ParticleBinData:
 	def __add__(self,other):
 		#User wants to combine the data contained in the two instances of the class into a new class
 
-
 		#CheckSum for error checking
 		CheckSum1 = 0.0
                 for i in range(0,self.NumElements):
@@ -236,8 +233,8 @@ class ParticleBinData:
 
 		for i in range(0,other.NumElements):
 			CheckSum1 = CheckSum1 + float(other.ParticlesPerParcel[i])
+		
 		#Create object to hold the combined data and initialize to the second argument
-
 		#print("Number of elements in self:%d"%self.NumElements)
 		#print("Number of elements in other:%d"%other.NumElements)
 		CombinedData = ParticleBinData(self.ParticleDiameters,self.ParticlesPerParcel,self.NumElements)

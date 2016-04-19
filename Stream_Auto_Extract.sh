@@ -28,7 +28,7 @@
 
 ExtractString="v P r t a"
 CaseName="case"
-OutputFormat="vtk"
+OutputFormat="en"
 
 echo 'Running Loci-Stream Post-Processing Chain Submission Script'
 

@@ -14,7 +14,7 @@
 #
 #	Author: Christopher Neal
 #	Date   : 11/20/2015
-#	Updated: 02/22/2016
+#	Updated: 04/06/2016
 #
 ########################################################################
 
@@ -52,29 +52,30 @@ RadialBinFlag = 1 # 0 for cartesian y bins, 1 for cylindrical R bins. If 1, trea
 Dl = 0.0105 #Diameter of liquid injection
 
 #Start & Stop value of particle data file indices
-iStart = 1200
+iStart = 800
 iStep = 200
-iEnd = 2000
+iEnd = 3400
 
 
 #Particle statistics user definition section
-nXBins = 3
+nXBins = 4
 XMin = 0.0
-XMax = 0.01
-
-nYBins = 2
-YMin = 0.0
-YMax = 3.0e-4
-
-"""
-#Particle statistics user definition section
-nXBins = 5
-XMin = 0.0
-XMax = 0.10
+XMax = 0.21    
 
 nYBins = 5
 YMin = 0.0
-YMax = 5.0e-3
+YMax = 15.75e-3
+
+"""
+#For debugging
+#Particle statistics user definition section
+nXBins = 5
+XMin = 0.0
+XMax = 0.01
+
+nYBins = 5
+YMin = 0.0
+YMax = 3.0e-3
 """
 
 #Compute and store data filename numbers
@@ -324,28 +325,6 @@ else:
 #Plot PDF variable over diameter space. That is, for a given x value, make plots of D Versus N at the different values of the radial coordinate.
 DiameterFactor = 1e6
 
-
-#Find the maximum value of the variable about to be plotted so that the 
-#plot vertical axis can be scaled appropriately
-MaxVal = float(max(AVG_PDF[0][0].ParticleDiameters))*DiameterFactor
-MinVal = float(min(AVG_PDF[0][0].ParticleDiameters))*DiameterFactor
-
-#Change the min and max values a little bit so that all data lies within the bounds of the plots
-MaxVal = MaxVal + 0.05*abs(MaxVal)
-MinVal = MinVal - 0.05*abs(MinVal)
-                                
-plt.plot(AVG_PDF[0][0].ParticleDiameters,AVG_PDF[0][0].ParticlesPerParcel, marker='o')
-plt.xlabel('Non-Dimensional X Coordinate (X/DL)')
-plt.ylabel('Particle Counts')
-plt.ylim([MinVal, MaxVal])
-
-outputFileName = CaseName + "_PDF_" + '%s%4.2f'%('Y',PDF_Y_Coords[0]/Dl) + ".png"
-print("Saving a figure to:%s\n"%(outputFileName))
-plt.savefig(outputFileName, bbox_inches='tight')
-plt.close()
-
-
-
 #Plot data about radial distribution of particles at each X coordinate
 for i in range(0,nXBins):
 
@@ -362,9 +341,6 @@ for i in range(0,nXBins):
 			
 
 		xValues = np.asarray(AVG_PDF[i][j].ParticleDiameters)
-		type(DiameterFactor)
-		type(xValues[0])
-
 		for m in range(0,len(AVG_PDF[i][j].ParticleDiameters)):
 			xValues[m] = float(xValues[m])*float(DiameterFactor)
 		
@@ -388,7 +364,6 @@ for i in range(0,nXBins):
 
 #Go back to the original data directory
 os.chdir("..")
-
 
 
 print("\n Program has finished... \n")
