@@ -93,6 +93,7 @@ print("Follow Output Variables Detected:\n")
 for i in range(0,len(VariableList)):
 	print(VariableList[i])
 
+
 #Rename all solution files to have correct timestamp
 count=0
 for ts in time_step:
@@ -112,8 +113,12 @@ for ts in time_step:
 
 	#Loop over plotting variable files and copy them to output directory with correct name
 	for variables in VariableList:
+
+		#Remove any underscores from the variable names because ENSIGHT doesn't like variable names with underscores
+		NewVariableName = variables.replace("_","")
+
 		#Generate new name with correct ENSIGHT GOLD naming convention
-		NewVariableName=variables+"_"+ZeroPad+str(count)
+		NewVariableName=NewVariableName+"_"+ZeroPad+str(count)
 
 		PathToOriginalFile = os.path.join(src, variables)
 		PathToNewFile      = os.path.join(OutputFolderPath, NewVariableName)
@@ -178,6 +183,7 @@ case_filename = CaseName+".case"
 os.chdir(OutputFolderPath)       #Go into folder
 
 
+
 #Update all variable lines to use wildcard representation
 print("Updating Case file Specification")
 tmpFile=open("TempCaseFile",'w+')
@@ -190,7 +196,10 @@ for FileLine in open (case_filename, "r") :
 		for variables in VariableList:
 			if( variables == StrElement):
 				#replace the last string in line with wildcard String
-				WildCardString=variables+"_"+Wild_Card
+				#Note that if variable had underscore in name, the associated file will note have that
+				#and so we must remove it from the wildcare filename
+				FixedVariableName = variables.replace("_","")
+				WildCardString = FixedVariableName + "_" + Wild_Card
 				FileLine[-1]=WildCardString
 
 
