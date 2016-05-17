@@ -10,14 +10,12 @@
 # Output: 	A data file containing the particle diameter PDF data for the positions and bin widths
 #		specified.
 #
-#		
 #
 #	Author: Christopher Neal
 #	Date   : 11/20/2015
-#	Updated: 04/06/2016
+#	Updated: 05/11/2016
 #
 ########################################################################
-
 
 import os #OS specific commands forreading and writing files
 import sys #For parsing user input to the script
@@ -52,30 +50,31 @@ RadialBinFlag = 1 # 0 for cartesian y bins, 1 for cylindrical R bins. If 1, trea
 Dl = 0.0105 #Diameter of liquid injection
 
 #Start & Stop value of particle data file indices
-iStart = 800
+iStart = 4000
 iStep = 200
-iEnd = 3400
-
+iEnd = 4600
 
 #Particle statistics user definition section
-nXBins = 4
+nXBins = 10
 XMin = 0.0
-XMax = 0.21    
+XMax = 12.6e-3      
 
-nYBins = 5
+nYBins = 10
 YMin = 0.0
-YMax = 15.75e-3
+YMax = 5.25e-3  #Old value 15.75e-3
+
 
 """
 #For debugging
 #Particle statistics user definition section
-nXBins = 5
+nXBins = 2
 XMin = 0.0
 XMax = 0.01
 
-nYBins = 5
+nYBins = 3
 YMin = 0.0
-YMax = 3.0e-3
+YMax = 2.0e-3
+
 """
 
 #Compute and store data filename numbers
@@ -154,6 +153,7 @@ for i in range(0,NumFiles):
 	numrows = len(ParticleData)  
         numcols = len(ParticleData[0])
 
+	print("Number of parcels in dataset %d :\t%10.6E"%(i+1,numrows))
 
 	#Now we have all particle data in the file we now process the data
         #Allocate a numpy array to store the floating point data & copy into array
@@ -187,9 +187,10 @@ for i in range(0,NumFiles):
 	print("Counting Particles for File: %d"%(i+1))
 	for j in range(0,nXBins):
 		
-		print("Computing PDF for X-bin:\t%d"%(j+1))
+		print("Placing parcels into X-bin:\t%d"%(j+1))
 		for k in range(0,nYBins):
-			print("\tComputing PDF for Y-bin:\t%d"%(k+1))
+
+			print("\tPlacing parcels into Y-bin:\t%d"%(k+1))
 			ParcelsInBinCount = 0
 			for m in range(0,NumParcels):  #Loop over all parcels to find which are in the current bin
 				if(RealParticleData[m][1] < X_Bin_Coords[1][j] and RealParticleData[m][1] >= X_Bin_Coords[0][j] and 
@@ -201,24 +202,17 @@ for i in range(0,NumFiles):
 		
 
 
-print("Compressing particle diameter data 1 comprehensive diameter PDF data set")
+
+print("Performing a Compression and a Sort on the particle diameter data to improve performance")
 #Compress each of the data structures to make sure there are no repeated diameter entries(makes data set smaller)
-for i in range(0,NumFiles):
-	for j in range(0,nXBins):
-		for k in range(0,nYBins):
-			PDF_Data[i][j][k].compress_data
-	
-
-
-
-print("Performing a sort on the particle diameter data to improve performance")
 #Sort diameter data in the data structure to speed up the merging process
 for i in range(0,NumFiles):
         for j in range(0,nXBins):
-                print("Sorting X Bin: %d\n"%(j+1))
+                print("Compressing And Sorting X Bin: %d\n"%(j+1))
                 for k in range(0,nYBins):
-                        print("Sorting Y Bin: %d\n"%(k+1))
-                        PDF_Data[i][j][k].sort_diameters() 
+                        print("Compressing And Sorting Y Bin: %d\n"%(k+1))
+			PDF_Data[i][j][k].sort_diameters()
+			PDF_Data[i][j][k].compress_data()
 
 
 print("Merging data over all files")
@@ -235,8 +229,11 @@ for i in range(0,NumFiles):
 			else:
 				AVG_PDF[j][k] =  AVG_PDF[j][k] + PDF_Data[i][j][k]
 
+				#Sort and compress the new output
+				AVG_PDF[j][k].sort_diameters()
+				AVG_PDF[j][k].compress_data()
 
-	print("Data file %d successfully merged\n"%(i))
+	print("Data file %d successfully merged\n"%(i+1))
 
 
 #For Debugging 
@@ -254,23 +251,25 @@ if(BinFlag == 1): #Use the user defined bins
 	UserDefinedBins.append([])
 	
 	#Store the Delta-D bin spacing
-	DeltaD = float((Diameter_Max-Diameter_Min))/nDBins
-
+	DeltaD = float((Diameter_Max-Diameter_Min))/float(nDBins)
+	print("Using diameter bin width of: %10.6E"%(DeltaD))
+	print("Bin #\t\tLeft Bin Coord\t\tRight Bin Coord")
 	for i in range(0,nDBins):
 		UserDefinedBins[0].append( str(Diameter_Min + DeltaD*i) )
 		UserDefinedBins[1].append( str(Diameter_Min + DeltaD*(i+1)) )
+		print("%d\t\t%s\t\t%s"%(i+1,UserDefinedBins[0][i],UserDefinedBins[1][i]))
 
-	#Re-Bin all of the diameter data
+
+	#Re-Bin all of the diameter data using the newly defined diameters
 	for i in range(0,nXBins):
 		for j in range(0,nYBins):
+			AVG_PDF[i][j].sort_particlesPerParcel()
 			AVG_PDF[i][j].custom_bins(UserDefinedBins)
+			AVG_PDF[i][j].sort_diameters()
 
 
 
 print("Writing Output Data")
-#Write the Average PDF Data to a file of the same basename as the particle data file
-OutputFileName= CaseName + "_PDF" + "_" + str(i) + "." + "dat"
-f_output = open(OutputFileName,"w")
 
 #Write the output so that all of the Y data for a particular X bin is contained within 1 file. The file will match in essence the
 #format used for the experimental data file so that post-processing the data will be made faster.
@@ -294,16 +293,17 @@ for i in range(0,nXBins):
 	f_output.write("\n")
 	f_output.write("\n")
 	f_output.write("\n")	
-	f_output.write("\n")
 
-	for m in range(0,nDBins):
+	if(BinFlag == 1):
+		for m in range(0,nDBins):
 	
-		f_output.write("%10.6E\t"%( 0.5*(float(UserDefinedBins[0][m]) + float(UserDefinedBins[1][m]) ) ) )
+			f_output.write("%10.6E\t"%( 0.5*(float(UserDefinedBins[0][m]) + float(UserDefinedBins[1][m]) ) ) )
 
-        	for j in range(0,nYBins):
-                	f_output.write("%10.6E\t"%( float(AVG_PDF[i][j].ParticlesPerParcel[m]) ))
+        		for j in range(0,nYBins):
+                		f_output.write("%10.6E\t"%( float(AVG_PDF[i][j].ParticlesPerParcel[m]) ))
 	
-		f_output.write("\n")
+			f_output.write("\n")
+			f_output.write("\n")
 
 	f_output.close()
 
@@ -332,8 +332,17 @@ for i in range(0,nXBins):
 
 		#Find the maximum value of the variable about to be plotted so that the 
 		#plot vertical axis can be scaled appropriately
-		MaxVal = float(max(AVG_PDF[i][j].ParticlesPerParcel))
-		MinVal = float(min(AVG_PDF[i][j].ParticlesPerParcel))
+		for k in range(0,AVG_PDF[i][j].NumElements):
+			if(k==0):
+				MaxVal = float(AVG_PDF[i][j].ParticlesPerParcel[k])
+				MinVal = float(AVG_PDF[i][j].ParticlesPerParcel[k])
+
+			elif(float(AVG_PDF[i][j].ParticlesPerParcel[k])>MaxVal):
+				MaxVal = float(AVG_PDF[i][j].ParticlesPerParcel[k])
+
+			elif(float(AVG_PDF[i][j].ParticlesPerParcel[k])<MinVal):
+				MinVal = float(AVG_PDF[i][j].ParticlesPerParcel[k])
+			
 
 		#Change the min and max values a little bit so that all data lies within the bounds of the plots
 		MaxVal = MaxVal + 0.05*abs(MaxVal)

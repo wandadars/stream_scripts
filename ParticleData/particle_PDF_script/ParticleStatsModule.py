@@ -10,12 +10,13 @@
 #######################################################################################
 
 def IQR(DataSet):
-
         import numpy as np
+	
+	#DataSet is the form of a 1D vector of information such as observations of an experiment
 	q75, q25 = np.percentile(DataSet, [75 ,25])
 	return q75 - q25
 
-def Output_PDF_Data(ParticleData,N_Parcels,BinFlag):
+def Output_SMD_PDF_Data(ParticleData,N_Parcels,BinFlag):
 
 	import numpy as np
 

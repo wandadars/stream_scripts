@@ -32,13 +32,11 @@ def Read_HDF5_Particle_Data(CaseName,timeStamp,ScriptPath):
 	entryCount = 0
 	for Line in f:
 
-
 		#Stop when we have been reading data and we encounter a brace character on the line
                 if(ReadyToRead == True  and "}" in Line ):
                         break
 
 		if(ReadyToRead == True):
-
 			#Parse line
 			LineData=Line.rstrip()
 			LineData =LineData.replace(","," ")
@@ -130,6 +128,8 @@ def Read_HDF5_Particle_Data(CaseName,timeStamp,ScriptPath):
         	PositionData[k]=list(itertools.chain.from_iterable(PositionData[k]))
 
 
+
+
 	#Read number of particle data from HDF5 File
         FileName = "ptnump_ptsca."+str(timeStamp)+"_"+CaseName
 
@@ -150,7 +150,6 @@ def Read_HDF5_Particle_Data(CaseName,timeStamp,ScriptPath):
                         break
 
                 if(ReadyToRead == True):
-
                         #Parse line
                         LineData=Line.rstrip()
                         LineData =LineData.replace(","," ")
@@ -169,7 +168,7 @@ def Read_HDF5_Particle_Data(CaseName,timeStamp,ScriptPath):
         ParticleNumberData=list(itertools.chain.from_iterable(ParticleNumberData))
 
 
-	#Store all of the particle data that is current in a list format into a numpy array
+	#Store all of the particle data that is current in a list format into large list
 	ParticleData=[]
 	for i in range(0,entryCount):
 		ParticleData.append([])
