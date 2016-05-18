@@ -25,7 +25,11 @@ def Read_HDF5_Particle_Data(CaseName,timeStamp,ScriptPath):
 	#called: tempPythonFile.txt
 	
         #open file if file exists, otherwise throw exception
-        f=open("tempPythonFile.txt",'r')
+	try:
+		f=open("tempPythonFile.txt",'r')
+        except IOError as e:
+    		print "Unable to open file" #Does not exist OR no read permissions
+        
 
 	DiameterData=[]
 	ReadyToRead = False
@@ -52,12 +56,14 @@ def Read_HDF5_Particle_Data(CaseName,timeStamp,ScriptPath):
 	
 
 
-	#Close the data file
+	#Close and delete the data file
 	f.close()
-	
+	os.remove("tempPythonFile.txt")
+
 	#Perform list comprehension to un-nest the list that was made(not sure why it is nested, but it is)
 	DiameterData=list(itertools.chain.from_iterable(DiameterData))
 
+	print("Detected %d parcels in data file"%(entryCount))
 
 
 	#Read Parcel Coordinate Data from File
@@ -69,7 +75,11 @@ def Read_HDF5_Particle_Data(CaseName,timeStamp,ScriptPath):
         #called: tempPythonFile.txt
 	
 	#open file if file exists, otherwise throw exception
-        f=open("tempPythonFile.txt",'r')
+	try:
+                f=open("tempPythonFile.txt",'r')
+        except IOError as e:
+                print "Unable to open file" #Does not exist OR no read permissions
+
 
         PositionData=[]
 	PositionData.append([])
@@ -120,8 +130,9 @@ def Read_HDF5_Particle_Data(CaseName,timeStamp,ScriptPath):
                         ReadyToRead = True
 
 
-        #Close the data file
+        #Close and delete the data file
         f.close()
+	os.remove("tempPythonFile.txt")
 
 	#Perform list comprehension to un-nest the list that was made(not sure why it is nested, but it is)
 	for k in range(0,3):
@@ -139,7 +150,11 @@ def Read_HDF5_Particle_Data(CaseName,timeStamp,ScriptPath):
         #called: tempPythonFile.txt
 
         #open file if file exists, otherwise throw exception
-        f=open("tempPythonFile.txt",'r')
+	try:
+                f=open("tempPythonFile.txt",'r')
+        except IOError as e:
+                print "Unable to open file" #Does not exist OR no read permissions
+
 
         ParticleNumberData=[]
         ReadyToRead = False
@@ -163,12 +178,13 @@ def Read_HDF5_Particle_Data(CaseName,timeStamp,ScriptPath):
 
         #Close the data file
         f.close()
-	
+	os.remove("tempPythonFile.txt")	
+
 	#Perform list comprehension to un-nest the list that was made(not sure why it is nested, but it is)
         ParticleNumberData=list(itertools.chain.from_iterable(ParticleNumberData))
 
 
-	#Store all of the particle data that is current in a list format into large list
+	#Store all of the particle data that is currently in a list format into one large list
 	ParticleData=[]
 	for i in range(0,entryCount):
 		ParticleData.append([])

@@ -50,9 +50,9 @@ RadialBinFlag = 1 # 0 for cartesian y bins, 1 for cylindrical R bins. If 1, trea
 Dl = 0.0105 #Diameter of liquid injection
 
 #Start & Stop value of particle data file indices
-iStart = 4000
+iStart = 6000
 iStep = 200
-iEnd = 4600
+iEnd = 6600
 
 #Particle statistics user definition section
 nXBins = 10
