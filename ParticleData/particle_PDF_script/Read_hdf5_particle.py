@@ -31,6 +31,7 @@ def Read_HDF5_Particle_Data(CaseName,timeStamp,ScriptPath):
     		print "Unable to open file" #Does not exist OR no read permissions
         
 
+	print("Storing diameter data from file: %s"%(FileName))
 	DiameterData=[]
 	ReadyToRead = False
 	entryCount = 0
@@ -81,6 +82,9 @@ def Read_HDF5_Particle_Data(CaseName,timeStamp,ScriptPath):
                 print "Unable to open file" #Does not exist OR no read permissions
 
 
+	print("Storing parcel coordinate data from file: %s"%(FileName))
+
+	#Store data in a 3xN list
         PositionData=[]
 	PositionData.append([])
 	PositionData.append([])
@@ -138,10 +142,10 @@ def Read_HDF5_Particle_Data(CaseName,timeStamp,ScriptPath):
 	for k in range(0,3):
         	PositionData[k]=list(itertools.chain.from_iterable(PositionData[k]))
 
+	print("Number of rows in parcel position data set:%d\nNumber of columns in parcel position data set:%d"%(len(PositionData),len(PositionData[0])))
+	
 
-
-
-	#Read number of particle data from HDF5 File
+	#Read number of particles per parcel data from HDF5 File
         FileName = "ptnump_ptsca."+str(timeStamp)+"_"+CaseName
 
 	BashCommand = ScriptPath+"/"+"Extract_HDF5Data.sh "+ FileName
@@ -156,8 +160,11 @@ def Read_HDF5_Particle_Data(CaseName,timeStamp,ScriptPath):
                 print "Unable to open file" #Does not exist OR no read permissions
 
 
+	print("Storing particles per parcel data from file: %s"%(FileName))
+
         ParticleNumberData=[]
         ReadyToRead = False
+	parcel_check_counter = 0 #For checking that all data is actually being read from file
 	for Line in f:
 
                 #Stop when we have been reading data and we encounter a brace character on the line
@@ -169,8 +176,10 @@ def Read_HDF5_Particle_Data(CaseName,timeStamp,ScriptPath):
                         LineData=Line.rstrip()
                         LineData =LineData.replace(","," ")
                         LineData=LineData.split()
+		
 
                         ParticleNumberData.append(LineData)
+			parcel_check_counter = parcel_check_counter + 1
 
                 if("DATA {" in Line):   #Real data is on next line. Prepare to read
                         ReadyToRead = True
@@ -183,6 +192,7 @@ def Read_HDF5_Particle_Data(CaseName,timeStamp,ScriptPath):
 	#Perform list comprehension to un-nest the list that was made(not sure why it is nested, but it is)
         ParticleNumberData=list(itertools.chain.from_iterable(ParticleNumberData))
 
+	print("Number of particles per parcel data read: %d"%(parcel_check_counter))
 
 	#Store all of the particle data that is currently in a list format into one large list
 	ParticleData=[]

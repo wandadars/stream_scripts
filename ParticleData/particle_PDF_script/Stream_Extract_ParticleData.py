@@ -52,8 +52,20 @@ Dl = 0.0105 #Diameter of liquid injection
 #Start & Stop value of particle data file indices
 iStart = 6000
 iStep = 200
-iEnd = 6600
+iEnd = 7000
 
+
+
+#Particle statistics user definition section
+nXBins = 2
+XMin = 0.0
+XMax = 105e-3
+
+nYBins = 2
+YMin = 0.0
+YMax = 2.1e-3  #Old value 15.75e-3
+
+"""
 #Particle statistics user definition section
 nXBins = 10
 XMin = 0.0
@@ -62,7 +74,7 @@ XMax = 12.6e-3
 nYBins = 10
 YMin = 0.0
 YMax = 5.25e-3  #Old value 15.75e-3
-
+"""
 
 """
 #For debugging

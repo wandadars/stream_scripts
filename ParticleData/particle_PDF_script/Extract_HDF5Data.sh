@@ -15,6 +15,7 @@
 #     by the Python program
 
 
-h5dump --noindex $1 > tempPythonFile.txt
+h5dump --noindex $1 > tempPythonFile.txt &
+wait
 
 
