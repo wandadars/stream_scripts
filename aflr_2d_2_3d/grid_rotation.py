@@ -17,27 +17,25 @@
 
 import os #OS specific commands forreading and writing files
 import sys #For parsing user input to the script
+import time
 import subprocess
 
+source_path = os.path.dirname(os.path.abspath(__file__))
+shell_script_path=source_path+"/program_operations.sh "
+print "Executing file: ", shell_script_path
 
-#For calling the h5dump shell script
-ShellScriptPath="/home/neal/codes/locistream/stream_scripts/ParticleData"
+run_directory = os.getcwd()
+print "Running in Directory: ",run_directory
 
 
-#Name of the grid i.e. <name>.vog
-grid_base_name=Recover
 
-#Name of boundary face that is not rotated on the pie slice
-boundary_1 = "BC_15"
+grid_base_name="hagPos_axisym" #Name of the grid i.e. <name>.vog
+boundary_1 = "BC_6" #Name of boundary face that is not rotated on the pie slice
+boundary_2 = "BC_5" #Name of boundary face that IS rotated on the pie slice
+theta_0 = 6 #Angle of initial provided pie-slice sector that was generated from AFLR2d
+epsilon = 1e-6 #Define the smallest number that you want to call zero
 
-#Name of boundary face that IS rotated on the pie slice
-boundary_2 = "BC_14"
 
-#Angle of initial provided pie-slice sector that was generated from AFLR2d
-theta_0 = 90
-
-#Define the smallest number that you want to call zero
-epsilon = 1e-6
 
 #Make sure that the initial angle goes equally into 360 degrees
 a = 360.0/theta_0
@@ -48,8 +46,8 @@ if( abs(b) >= epsilon ) :
 	print "Error, pie slice does not go evenly into 360 degrees. Make new slice"
 else:
 	num_rotations = int(360.0/theta_0) - 1  #minus 1 because we start with the original pie slice
+	print "Rotating pie slice of: ",theta_0," degrees, ",num_rotations," times."	
 	good_to_go = True
-
 
 
 if( good_to_go == True):
@@ -57,30 +55,30 @@ if( good_to_go == True):
 
 		if(i == 0 ):
 			#Rename the left and right boundaries to face1 and face2
-			subprocess.call(["./program_operations.sh",grid_base_name,"0",boundary_1,boundary_2])		
+			subprocess.call("%s %s %s %s %s" %(shell_script_path,grid_base_name, "0", boundary_1, boundary_2),shell=True)
 
 			#Rotate the pie slice
 			rotation_angle = theta_0*(i+1)
-			subprocess.call(["./program_operations.sh",grid_base_name,"1",rotation_angle])
-			
-			#Glue the two faces together
-			subprocess.call(["./program_operations.sh",grid_base_name,"2"])
+			subprocess.call("%s %s %s %s"%(shell_script_path,grid_base_name,"1",str(rotation_angle)),shell=True)
 
-		else if( i == num_rotations -1):
+			#Glue the two faces together
+			subprocess.call("%s %s %s" % (shell_script_path,grid_base_name,"2"),shell=True)
+			
+		elif( i == num_rotations -1):
 			#Rotate the pie slice
                         rotation_angle = theta_0*(i+1)
-                        subprocess.call(["./program_operations.sh",grid_base_name,"1",rotation_angle])
+                        subprocess.call("%s %s %s %s" % (shell_script_path,grid_base_name,"1",str(rotation_angle)),shell=True)
 
 			#Glue the final two faces together
-			subprocess.call(["./program_operations.sh",grid_base_name,"4"])
+			subprocess.call("%s %s %s" % (shell_script_path,grid_base_name,"4"),shell=True)
 
 		else:
 			#Rotate the pie slice to the new position
 			rotation_angle = theta_0*(i+1)
-                        subprocess.call(["./program_operations.sh",grid_base_name,"1",rotation_angle])
+                        subprocess.call("%s %s %s %s" % (shell_script_path,grid_base_name,"1",str(rotation_angle)),shell=True)
 
 			#Glue the touching faces together
-			subprocess.call(["./program_operations.sh",grid_base_name,"3"])
+			subprocess.call("%s %s %s" % (shell_script_path,grid_base_name,"3"),shell=True)
 
 
 
