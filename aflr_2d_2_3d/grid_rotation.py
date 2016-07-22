@@ -29,10 +29,10 @@ print "Running in Directory: ",run_directory
 
 
 
-grid_base_name="hagPos_axisym" #Name of the grid i.e. <name>.vog
-boundary_1 = "BC_6" #Name of boundary face that is not rotated on the pie slice
-boundary_2 = "BC_5" #Name of boundary face that IS rotated on the pie slice
-theta_0 = 6 #Angle of initial provided pie-slice sector that was generated from AFLR2d
+grid_base_name="injector_3d" #Name of the grid i.e. <name>.vog
+boundary_1 = "BC_28" #Name of boundary face that is not rotated on the pie slice
+boundary_2 = "BC_27" #Name of boundary face that IS rotated on the pie slice
+theta_0 = 4 #Angle of initial provided pie-slice sector that was generated from AFLR2d
 epsilon = 1e-6 #Define the smallest number that you want to call zero
 
 
