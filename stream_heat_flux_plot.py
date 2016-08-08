@@ -58,12 +58,24 @@ except IOError as e:
 #Data in the file is structured in the following way:
 #x [y] [z] heat_flux
 #The terms in [] may not be present in the actual file
-with open(input_file_name,'r') as content_file:
-	data = content_file.read()
+data = []
+line_count = 0
+with open(input_file_name) as f:
+
+	for lines in f:
+		line = lines.rstrip()
+		line = line.split()
+
+		if line is not  None:
+			data.append([])
+			for entry in line:
+				data[line_count].append(entry)
+			line_count = line_count + 1
 
 #store the number of rows of data
 numrows = len(data)
 numcols = len(data[0])
+
 
 if numcols == 2:
 	col_names = ['x','qdot']
@@ -71,26 +83,32 @@ elif numcols == 4:
 	col_names = ['x','y','z','qdot']
 
 
+
 if(avg_all_data == True):
 
 	averaged_data = []
 
-	uniquex_x = [data[0][0]] #the first value is stored to initialize the process
+	unique_x = []
+	unique_x.append(data[0][0]) #the first value is stored to initialize the process
 	entry_count = 0
-	unique_rows = 0
 	Sum = 0
 	for i in range(0,numrows):
-		if(data[i][0] == unique_x[len(unique_x)): #Repeat entry that needs to be averaged
+		
+		if(i == numrows-1):
+                        averaged_data.append([])
+                        #store mean value of heat flux
+                        averaged_data[len(unique_x)-1].append(unique_x[len(unique_x)-1])
+                        averaged_data[len(unique_x)-1].append(float(Sum)/float(entry_count))
+
+		elif( data[i][0] == unique_x[-1] ): #Repeat entry that needs to be averaged
 			entry_count = entry_count + 1
-			Sum = Sum + data[i][-1]
-		elif(i == numrows-1):
-			averaged_data[len(unique_x)].append
+			Sum = Sum + float(data[i][-1])
+
 		else:	
-	
-			averaged_data.append()
+			averaged_data.append([])
 			#store mean value of heat flux
-			averaged_data[len(unique_x)].append(unique_x[len(unique_x)])
-			averaged_data[len(unique_x)].append(float(Sum)/float(entry_count))
+			averaged_data[len(unique_x)-1].append(unique_x[len(unique_x)-1])
+			averaged_data[len(unique_x)-1].append(float(Sum)/float(entry_count))
 			
 			#reset counters
 			entry_count = 0
@@ -101,23 +119,39 @@ if(avg_all_data == True):
 
 
 #Print & output to screen for testing
-for i in range(len(unique_x)):
+#for i in range(0,len(unique_x)):
+#	for j in range(0,len(averaged_data[0])):
+#		print averaged_data[i][j]
+
+#Print data to file
+try:
+  f=open("averaged_"+input_file_name,"w+")
+except IOError as e:
+  print "I/O error({0}): {1}".format(e.errno, e.strerror)
+  raise
+
+for i in range(0,len(averaged_data)):
 	for j in range(0,len(averaged_data[0])):
-		print averaged_data[i][j]
+		f.write("%10.6E\t"%(float(averaged_data[i][j])))
+	f.write("\n")
 
 
+np_averaged_data = np.zeros((len(averaged_data),len(averaged_data[0])))
 
-
+for i in range(0,len(averaged_data)):
+        for j in range(0,len(averaged_data[0])):
+		np_averaged_data[i,j] = float(averaged_data[i][j])
 
 #Find the maximum value of the variable about to be plotted so that the plot vertical axis can be scaled appropriately
-MaxVal = np.amax(averaged_data[:,1])
-MinVal = np.amin(averaged_Data[:,1])
+MaxVal = np.amax(np_averaged_data[:,1])
+MinVal = np.amin(np_averaged_data[:,1])
+
 
 #Change the min and max values a little bit so that all data lies within the bounds of the plots
 MaxVal = MaxVal + 0.05*abs(MaxVal)
 MinVal = MinVal - 0.05*abs(MinVal)
  
-plt.plot(Force_Data[:,0],Force_Data[:,1], marker='o')
+plt.plot(np_averaged_data[:,0],np_averaged_data[:,-1], linestyle='None',marker='o')
 plt.xlabel('X (meters)')
 plt.ylabel('Heat Flux (qdot)')
 plt.ylim([MinVal, MaxVal])
