@@ -1,0 +1,42 @@
+#!/bin/bash
+#
+#  NQS command file
+#
+#PBS -W group_list=e1532
+#PBS -l walltime=00:10:00
+#PBS -l select=1:ncpus=1:model=ivy
+#PBS -j oe
+#PBS -N Stream_extract
+#PBS -q normal
+#PBS -r n
+#PBS -o job_extract_chain.log
+
+cd $PBS_O_WORKDIR
+
+arch='uname -p'
+echo Architecture = $arch
+
+module load Chem/4.0-beta-4_20160308
+
+EXEC=/nobackupnfs2/jylin/codeBinary/loci/Loci-4.0/Loci-4.0-beta-4/live_20160308/Loci-Linux-x86_64-icpc-rel-4-0-beta-4/bin/extract
+
+echo "Executable	=" $EXEC
+echo "Current Directory	=" 'pwd'
+
+export MPI_NUM_MEMORY_REGIONS=8
+
+case='case'
+outtype='en' #supported output formats e.g. en vtk ascii
+extracted_variables='P r t v ZZ Zvar C wc wt tf t_tf zone'
+
+Solution_time=solutionTime
+
+echo "Using extract options: -$outtype $case $Solution_time "
+
+echo Using 'which mpiexec'
+
+date >> run.out
+  (mpiexec $EXEC -$outtype $case solutionTime $extracted_variables >> extract_solutionTime.out) </dev/null >& error_solutionTime.log
+date >> run.out
+
+
