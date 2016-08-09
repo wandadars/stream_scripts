@@ -54,30 +54,22 @@ sed -n -i "s/[^_]*_//p" temp.txt
 #Reverse lines back to orginal orientation
 sed  -i '/\n/!G;s/\(.\)\(.*\n\)/&\2\1/;//D;s/.//' temp.txt
 
-
 #At this point we have all of the timestamps, but they mat not be sorted.
 #Sort the times and store them in the file Extracted_Timestamps.txt
-
 sort -k1g temp.txt > Extracted_Timestamps.txt
+
+mv Extracted_Timestamps.txt ..
+cd ..
 
 #Remove temporary files
 rm -rf temp.txt
-
-mv Extracted_Timestamps.txt ..
-
-cd ..
-
-
-#At this point we have all of the times, but they are not sorted.
-#Sort the times that are in Extracted_Data_Labels.txt
-sort -k1g temp.txt > Extracted_Data_Labels.txt
 
 ###
 
 
 # Copy the .pbs job script to a temporary file to prevent the template
 # from being permanently changed.
-cp -rf  job_extract_chain.msub tempScript.msub
+cp -rf  job_extract_chain.pbs tempScript.pbs
 
 if [ "$#" -lt 3 ]; then
 	MaxJobNum=1000000
@@ -99,20 +91,21 @@ if [ $(($c%$1)) == 0 -a $c -le $MaxJobNum ]; then #Check to see if the file is a
    
       #Replace job log file line in submission script with unique identifier
       ReplaceString="#PBS -o job_extract_chain_$c.log"
-      sed -i "s/#PBS -o.*/$ReplaceString/" job_extract_chain.msub
+      sed -i "s/#PBS -o.*/$ReplaceString/" job_extract_chain.pbs
 
       # The variable $line1 contains the timestamp that we want to run post-processing for
       # Replace the solution_time entry in the job submission template with the actual time
       # and submit job
       ReplaceString="$line1"  
 
-      sed -i "s/solution_time.*/$ReplaceString/" job_extract_chain.msub
+      #sed -i "s/solutionTime.*/$ReplaceString/" job_extract_chain.pbs
+      sed -i "s/solutionTime/$ReplaceString/g" job_extract_chain.pbs
 
       #Submit the job file
-      qsub job_extract_chain.msub
+      qsub job_extract_chain.pbs
 
-      #Copy over the altered job file with the temporary template tempScript.msub
-      cp -rf  tempScript.msub job_extract_chain.msub
+      #Copy over the altered job file with the temporary template tempScript.pbs
+      cp -rf  tempScript.pbs job_extract_chain.pbs
   
    else
    
@@ -121,8 +114,7 @@ if [ $(($c%$1)) == 0 -a $c -le $MaxJobNum ]; then #Check to see if the file is a
 
          #Replace job log file line in submission script with unique identifier
          ReplaceString="#PBS -o job_extract_chain_$c.log"
-         sed -i "s/#PBS -o.*/$ReplaceString/" job_extract_chain.msub
-
+         sed -i "s/#PBS -o.*/$ReplaceString/" job_extract_chain.pbs
 
          # The variable $line1 contains the timestamp that we want to run rflupost for
          # Replace the TimeStamp entry in the job submission template with the actual time
@@ -130,13 +122,15 @@ if [ $(($c%$1)) == 0 -a $c -le $MaxJobNum ]; then #Check to see if the file is a
 
          ReplaceString="$line1"
 
-         sed -i "s/solution_time.*/$ReplaceString/" job_extract_chain.msub
+         #sed -i "s/solutionTime.*/$ReplaceString/" job_extract_chain.pbs
+	 sed -i "s/solutionTime/$ReplaceString/g" job_extract_chain.pbs
 
          #Submit the job file
-         qsub job_extract_chain.msub
+	 cat job_extract_chain.pbs
+         qsub job_extract_chain.pbs
 
-         #Copy over the altered job file with the temporary template tempScript.msub
-         cp -rf  tempScript.msub job_extract_chain.msub
+         #Copy over the altered job file with the temporary template tempScript.pbs
+         cp -rf  tempScript.pbs job_extract_chain.pbs
       fi #$c -ge $2
 
    fi #-z "$2"
@@ -146,15 +140,15 @@ fi #$(($c%$1)) == 0
 #Increment the counting variable, c
 c=$(($c+1))
 
-done < Extracted_Data_Labels.txt
+done < Extracted_Timestamps.txt
 
-# Write over the altered job_RFLU_postchain.msub file with the unaltered version
-# stored in tempScript.msub
+# Write over the altered job_RFLU_postchain.pbs file with the unaltered version
+# stored in tempScript.pbs
 
-cp -rf  tempScript.msub job_extract_chain.msub 
+cp -rf  tempScript.pbs job_extract_chain.pbs
 
 # Delete temporary file
-rm -rf tempScript.msub
+#rm -rf tempScript.pbs
 
 echo 'Program Finished...Ending'
 
