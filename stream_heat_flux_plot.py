@@ -3,7 +3,7 @@
 # Purpose:	Reads the output file from the Loci 'extract' utility that contains information
 #		about the heat flux leaving a boundary.
 #
-# Input: 	Name of the file that contains the columnated data
+# Input: 	Name of the file that contains the columnated data that is sorted according to x coordinate values!
 #		Format: x y z heat_flux
 #
 # Output: 	A set of plots showing the spatial variation of the heat flux.
@@ -57,7 +57,7 @@ except IOError as e:
 #Loop through entire file
 #Data in the file is structured in the following way:
 #x [y] [z] heat_flux
-#The terms in [] may not be present in the actual file
+#The terms in [] may or may not be present in the actual file
 data = []
 line_count = 0
 with open(input_file_name) as f:
@@ -76,6 +76,7 @@ with open(input_file_name) as f:
 numrows = len(data)
 numcols = len(data[0])
 
+print "Number of entries in file: ", numrows
 
 if numcols == 2:
 	col_names = ['x','qdot']
@@ -90,30 +91,33 @@ if(avg_all_data == True):
 
 	unique_x = []
 	unique_x.append(data[0][0]) #the first value is stored to initialize the process
-	entry_count = 0
-	Sum = 0
+	entry_count = 0 #Number of repeated values in the file that we average over
+	qdot_sum = 0
 	for i in range(0,numrows):
 		
-		if(i == numrows-1):
+		if(i == numrows-1): #Last value in file
                         averaged_data.append([])
-                        #store mean value of heat flux
-                        averaged_data[len(unique_x)-1].append(unique_x[len(unique_x)-1])
-                        averaged_data[len(unique_x)-1].append(float(Sum)/float(entry_count))
+
+			xloc = unique_x[len(unique_x)-1]
+
+                        averaged_data[len(unique_x)-1].append(xloc)
+                        averaged_data[len(unique_x)-1].append(float(qdot_sum)/float(entry_count)) #store mean heat flux
 
 		elif( data[i][0] == unique_x[-1] ): #Repeat entry that needs to be averaged
 			entry_count = entry_count + 1
-			Sum = Sum + float(data[i][-1])
+			qsot_sum = qdot_sum + float(data[i][-1])
 
 		else:	
 			averaged_data.append([])
 			#store mean value of heat flux
 			averaged_data[len(unique_x)-1].append(unique_x[len(unique_x)-1])
-			averaged_data[len(unique_x)-1].append(float(Sum)/float(entry_count))
+			averaged_data[len(unique_x)-1].append(float(qdot_sum)/float(entry_count))
 			
-			#reset counters
+			#reset counter and summation variable
 			entry_count = 0
-			Sum = 0
+			qdot_sum = 0
 
+			#Add the newly found coordinate to the list of unique x coordinates
 			unique_x.append(data[i][0])
 
 
