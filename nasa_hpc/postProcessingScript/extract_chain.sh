@@ -126,7 +126,6 @@ if [ $(($c%$1)) == 0 -a $c -le $MaxJobNum ]; then #Check to see if the file is a
 	 sed -i "s/solutionTime/$ReplaceString/g" job_extract_chain.pbs
 
          #Submit the job file
-	 cat job_extract_chain.pbs
          qsub job_extract_chain.pbs
 
          #Copy over the altered job file with the temporary template tempScript.pbs
@@ -148,7 +147,7 @@ done < Extracted_Timestamps.txt
 cp -rf  tempScript.pbs job_extract_chain.pbs
 
 # Delete temporary file
-#rm -rf tempScript.pbs
+rm -rf tempScript.pbs
 
 echo 'Program Finished...Ending'
 

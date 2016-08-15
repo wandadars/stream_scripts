@@ -1,0 +1,36 @@
+#!/bin/bash
+#
+#  NQS command file
+#
+#PBS -W group_list=e1532
+#PBS -l walltime=00:29:00
+#PBS -l select=1:ncpus=20:model=ivy
+#PBS -j oe
+#PBS -N 3d_WHT_rans
+#PBS -q debug
+#PBS -r n
+
+cd $PBS_O_WORKDIR
+
+limit coredumpsize 0
+\rm core.*
+unlimit
+
+module load Chem/4.0-beta-4_20160308
+
+EXEC=/u/crneal/streamBuilds/stream-rel-2-0-0-ec/bin/stream
+
+#setenv  MPI_IB_RAILS 2
+#setenv  MPI_GROUP_MAX 64
+#setenv  MPI_MEMMAP_OFF 1
+#setenv  MPI_USE_XPMEM 0
+#setenv  MPI_XPMEM_ENABLED 0
+export MPI_NUM_MEMORY_REGIONS=8
+
+date >> run.out
+  case='case'
+  restart='stop'
+  cat ${case}.vars >> run.out
+  (mpiexec $EXEC  --scheduleoutput  $case $restart >> run.out) </dev/null >& error.log
+date >> run.out
+cat debug/debug.0 >> debug.out
