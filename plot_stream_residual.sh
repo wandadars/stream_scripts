@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #############################################################
 usage1="Usage: $0 filename [xgraph-options]"
 #############################################################
@@ -27,4 +27,6 @@ echo \"Turb_w >>  res.plot
 grep "R: " $file |grep -v ERROR |  awk ' { print 1+i++,$9}'  >> res.plot
 echo "   "   >>  res.plot
 #
+
+
 cat res.plot | xgraph  -lw 2 -lny -fmty "%6.1e" -t "...`pwd | tail -55c`"  $@
