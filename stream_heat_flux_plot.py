@@ -78,6 +78,11 @@ numcols = len(data[0])
 
 print "Number of entries in file: ", numrows
 
+#Debugging
+#for entry in data:
+#	print entry
+
+
 if numcols == 2:
 	col_names = ['x','qdot']
 elif numcols == 4:
@@ -90,11 +95,11 @@ if(avg_all_data == True):
 	averaged_data = []
 
 	unique_x = []
-	unique_x.append(data[0][0]) #the first value is stored to initialize the process
+	unique_x.append(data[0][0]) #the first value is stored to initialize the process\
 	entry_count = 0 #Number of repeated values in the file that we average over
 	qdot_sum = 0
 	for i in range(0,numrows):
-		
+		#print "Comparing A: ",data[i][0], "   to   B:  ",unique_x[-1], "  Result is:  ",data[i][0]==unique_x[-1]
 		if(i == numrows-1): #Last value in file
                         averaged_data.append([])
 
@@ -105,7 +110,7 @@ if(avg_all_data == True):
 
 		elif( data[i][0] == unique_x[-1] ): #Repeat entry that needs to be averaged
 			entry_count = entry_count + 1
-			qsot_sum = qdot_sum + float(data[i][-1])
+			qdot_sum = qdot_sum + float(data[i][-1])
 
 		else:	
 			averaged_data.append([])
@@ -122,10 +127,14 @@ if(avg_all_data == True):
 
 
 
+#for x_coord in unique_x:
+#	print x_coord
+
 #Print & output to screen for testing
 #for i in range(0,len(unique_x)):
 #	for j in range(0,len(averaged_data[0])):
 #		print averaged_data[i][j]
+
 
 #Print data to file
 try:
