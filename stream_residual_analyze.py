@@ -20,9 +20,10 @@ class iteration_data:
 	def __init__(self,iteration_num=0,num_residuals=10,residual_list_input=None):
 		self.iteration_number = iteration_num
 		self.residuals_list = []
+	
 		if residual_list_input is None:
 			for i in range(0,num_residuals):
-				self.residuals_list.append("0.0")
+                                self.residuals_list.append("0.0")
 		else:
 			for i in range(0,num_residuals):
 				self.residuals_list.append(residual_list_input[i])
@@ -30,15 +31,24 @@ class iteration_data:
 	def get_residual(self,residual_num):
 		return self.residuals_list[residual_num]
 
-
 	def print_residual(self):
 		for i in range(0,len(self.residuals_list)):
 			print self.residuals_list[i]
 
+	def query_dataset(self):
+		print "Iteration Number is: ", self.iteration_number
+		print "Number of residual entries: ",len(self.residuals_list)
+		print "Residual data is: "
+		self.print_residual()
+	
 
 class timestep_data:
-        def __init__(self,TimeStamp="0"):
-		self.timestamp = TimeStamp
+        def __init__(self,TimeStamp=None):
+		if TimeStamp is None:
+			self.timestamp = "0"
+		else:
+			self.timestamp = TimeStamp
+
                 self.iteration_list = []
 
 	def add_iteration(self,iteration_data):
@@ -47,13 +57,19 @@ class timestep_data:
 	def get_time(self):
 		return self.timestamp
 
+	def get_num_iterations(self):
+		return len(self.iteration_list)
+
 	def get_starting_residual(self,desired_residual):
 		#Desired residual is an integer, while the dict is a key value pair of strings and integers
 		return self.iteration_list[0].get_residual(desired_residual)
-		
 	
-	def get_residual(self,iteration_number):
-		self.iteration_list[iteration_number].print_residual()
+	def get_residual(self,iteration_number,desired_residual):
+		return self.iteration_list[iteration_number].get_residual(desired_residual)
+
+	def query_dataset(self):
+		print "Timestamp value is: ", self.timestamp
+		print "Number of Iterations is: ", len(self.iteration_list)
 
 
 import os #OS specific commands forreading and writing files
@@ -69,7 +85,8 @@ from matplotlib import cm
 from matplotlib.ticker import LinearLocator, FormatStrFormatter
 
 
-#Store the name of the boundary that the user wants to plot the convergence data for.
+
+#Store the name of the residual file that is to be analzed.
 Residual_File_Name = str(sys.argv[1])
 
 #Test to see if the file exists, otherwise throw exception
@@ -134,48 +151,73 @@ elif(len(residual_tmp[3:]) == 8): #Turbulent compressible, multi species
 	residual_names = {0:'U Residual',1:'V Residual',2:'W Residual',3:'P Residual',4:'T Residual',5:'k Residual',6:'omega Residual',7:'Y Residual'}
 
 
+print "Detected residual list is: ", residual_names
+
 
 #Loop through entire file the residual data
 #Data in the file is structured in the following way(Note that [] is an optional entry):
 #R: n it uRes vRes wRes ppRes eRes kRes omegaRes [yRes]    
-residual_data = [ line for line in f if 'R:' in line]
+raw_residual_data = [ line for line in f if 'R:' in line]
 
-#for line in residual_data: 
+#for line in raw_residual_data: 
 #	print line.rstrip()
 
 CountingIterations = False
 timesteps_counter = 0
 timesteps = [] #Initialize the empty list of timesteps
-for Line in residual_data:
+inserted_first_timestep = False
+for Line in raw_residual_data:
 	lineData = Line.rstrip()
 	lineData = lineData.split()
 	
+	#print "Line Data from file: ", lineData
+
 	timestep_value = lineData[1]
+	#print "Timestep in Dataset is: ", timestep_value
+	
 	iteration_counter = lineData[2] 
+	#print "Iteration number is: ",iteration_counter
+
 
 	#Append this timestep to the list
         residual_list = lineData[3:]
-	#print residual_list
+	print "Residual data is: ",residual_list
+	
 
-	if(timesteps_counter == 0):
+	if( inserted_first_timestep is False):
 		timesteps.append(timestep_data(timestep_value))
 		iteration_tmp = iteration_data(iteration_counter,len(residual_list),residual_list)
+		#iteration_tmp.query_dataset()
+
 		timesteps[timesteps_counter].add_iteration(iteration_tmp)
-	elif( timesteps[timesteps_counter].get_time is lineData[1]):
+		#timesteps[timesteps_counter].query_dataset()
+		inserted_first_timestep = True
+
+	elif( timesteps[timesteps_counter].get_time() == timestep_value): #Entry that is within the same timestep
                 iteration_tmp = iteration_data(iteration_counter,len(residual_list),residual_list)
+		#iteration_tmp.query_dataset()
+
                 timesteps[timesteps_counter].add_iteration(iteration_tmp)
-	else:
+		#timesteps[timesteps_counter].query_dataset()
+
+	else:  #New timestep detected
 		timesteps_counter = timesteps_counter + 1
                 timesteps.append(timestep_data(timestep_value))
+
                 iteration_tmp = iteration_data(iteration_counter,len(residual_list),residual_list)
+		#iteration_tmp.query_dataset()
+
                 timesteps[timesteps_counter].add_iteration(iteration_tmp)
+		#timesteps[timesteps_counter].query_dataset()
+	
 
 
 #Debug
-print len(timesteps)
-for i in range(0,len(timesteps)):
-	print i
-	timesteps[i].get_residual(0)
+#print "Numer of timesteps detected: ",len(timesteps)
+#for i in range(0,len(timesteps)):
+#	print "Timestep # ",i+1
+#	timesteps[i].query_dataset()
+#	timesteps[i].get_residual(0)
 
 #Create a directory for the output
 OutputDir="residual_plot_data"
@@ -191,34 +233,104 @@ else:
 
 #Plot the total residual drop across every single iteration(timestep and internal iterations per timestep)
 
+
+#Create a directory for the output
+OutputDir="starting_residuals"
+if not os.path.exists(OutputDir):
+        os.makedirs(OutputDir)
+        os.chdir(OutputDir)
+else:
+        os.chdir(OutputDir)
+
 #Initialize empty lists to store x and y data for plotting
 x_vector = np.zeros(len(timesteps))
 y_vector = np.zeros(len(timesteps))
-for i,Residual_name in enumerate(residual_names):
+for i,Residual_name in residual_names.iteritems():
+	#print Residual_name,i
 	for j in range(0,len(timesteps)):
 		x_vector[j] = float( timesteps[j].get_time() ) 
-		print i, j
 		y_vector[j] = float( timesteps[j].get_starting_residual(i) )
-
+		#print Residual_name, timesteps[j].get_starting_residual(i), float(timesteps[j].get_starting_residual(i)), y_vector[j]
 	
 	#Find the maximum value of the variable about to be plotted so that the plot vertical axis can be scaled appropriately
 	MaxVal = np.amax(y_vector[:])
 	MinVal = np.amin(y_vector[:])
 
+	#print "Residual bounds for ",Residual_name," -- Lower: ",MinVal,"    Upper: ",MaxVal
+
 	#Change the min and max values a little bit so that all data lies within the bounds of the plots
 	MaxVal = MaxVal + 0.05*abs(MaxVal)
 	MinVal = MinVal - 0.05*abs(MinVal)
 	
-
-	plt.plot(Force_Data[:,0],Force_Data[:,1], marker='o')
+	plt.scatter(x_vector,y_vector, marker='o')
 	plt.xlabel('Timestep Number')
-	plt.ylabel(residual_name[Residual_name])
+	plt.ylabel(Residual_name)
 	plt.ylim([MinVal, MaxVal])
 	plt.draw
  
-	outputFileName = Residual_name + " "+ "initial_timestep_residual" + ".png"
+	outputFileName = Residual_name + "_" + "initial_residuals" + ".png"
 	plt.savefig(outputFileName, bbox_inches='tight')
 	plt.close()
+
+#Go back up to the residual data directory 
+os.chdir("..")
+
+
+
+
+#Create a directory for the output
+OutputDir="all_residuals"
+if not os.path.exists(OutputDir):
+        os.makedirs(OutputDir)
+        os.chdir(OutputDir)
+else:
+        os.chdir(OutputDir)
+
+
+#Determine the toal number of iterations
+total_iterations = 0
+for Time in timesteps:
+	total_iterations = total_iterations + Time.get_num_iterations()
+
+print "Total number of iterations is: ", total_iterations
+	
+
+#Initialize empty lists to store x and y data for plotting
+x_vector = np.zeros(total_iterations)
+y_vector = np.zeros(total_iterations)
+for i,Residual_name in residual_names.iteritems():
+
+	iteration_count = 0
+        for j in range(0,len(timesteps)):
+
+		for k in range(0,timesteps[j].get_num_iterations()):
+			
+                	x_vector[iteration_count] = iteration_count + 1
+                	y_vector[iteration_count] = float( timesteps[j].get_residual(k,i) )
+			iteration_count = iteration_count + 1
+
+        #Find the maximum value of the variable about to be plotted so that the plot vertical axis can be scaled appropriately
+        MaxVal = np.amax(y_vector[:])
+        MinVal = np.amin(y_vector[:])
+
+        #print "Residual bounds for ",Residual_name," -- Lower: ",MinVal,"    Upper: ",MaxVal
+
+        #Change the min and max values a little bit so that all data lies within the bounds of the plots
+        MaxVal = MaxVal + 0.05*abs(MaxVal)
+        MinVal = MinVal - 0.05*abs(MinVal)
+
+        plt.scatter(x_vector,y_vector, marker='o')
+        plt.xlabel('Timestep Number')
+        plt.ylabel(Residual_name)
+        plt.ylim([MinVal, MaxVal])
+        plt.draw
+
+        outputFileName = Residual_name + "_" + "residual_history" + ".png"
+        plt.savefig(outputFileName, bbox_inches='tight')
+        plt.close()
+
+
+
 
 
 #Go back to the main directory
