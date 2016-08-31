@@ -219,6 +219,20 @@ for Line in raw_residual_data:
 #	timesteps[i].query_dataset()
 #	timesteps[i].get_residual(0)
 
+
+
+
+#Debug section to recreate the original input data to verify that nothing was corrupted
+for i in range(0,len(timesteps)):
+	for j in range(0,timesteps[i].get_num_iterations()):
+		print("%s  %d "%(timesteps[i].get_time(),j)),
+		for k,Residual_Name in residual_names.iteritems():
+			print(" %s "%(timesteps[i].get_residual(j,k))),
+	
+		print 
+
+
+
 #Create a directory for the output
 OutputDir="residual_plot_data"
 if not os.path.exists(OutputDir):
@@ -300,12 +314,11 @@ x_vector = np.zeros(total_iterations)
 y_vector = np.zeros(total_iterations)
 for i,Residual_name in residual_names.iteritems():
 
-	iteration_count = 0
+	iteration_count = 0 # Reset to zero for each new quantity
         for j in range(0,len(timesteps)):
-
 		for k in range(0,timesteps[j].get_num_iterations()):
-			
                 	x_vector[iteration_count] = iteration_count + 1
+			#print timesteps[j].get_residual(k,i)
                 	y_vector[iteration_count] = float( timesteps[j].get_residual(k,i) )
 			iteration_count = iteration_count + 1
 
