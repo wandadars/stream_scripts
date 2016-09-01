@@ -60,10 +60,12 @@ class timestep_data:
 	def get_num_iterations(self):
 		return len(self.iteration_list)
 
-	def get_starting_residual(self,desired_residual):
-		#Desired residual is an integer, while the dict is a key value pair of strings and integers
-		return self.iteration_list[0].get_residual(desired_residual)
+	def get_starting_residual(self,desired_residual_id):
+		return self.iteration_list[0].get_residual(desired_residual_id)
 	
+	def get_ending_residual(self,desired_residual_id):
+                return self.iteration_list[-1].get_residual(desired_residual_id)
+
 	def get_residual(self,iteration_number,desired_residual):
 		return self.iteration_list[iteration_number].get_residual(desired_residual)
 
@@ -78,11 +80,11 @@ import numpy as np
 import time
 import math
 import matplotlib
-matplotlib.use('Agg')
+#matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
-from matplotlib import cm
-from matplotlib.ticker import LinearLocator, FormatStrFormatter
+#from mpl_toolkits.mplot3d import Axes3D
+#from matplotlib import cm
+#from matplotlib.ticker import LinearLocator, FormatStrFormatter
 
 
 
@@ -120,8 +122,10 @@ for Line in f:
 	if species_line_found == True and '}' in Line:
 		break
 
+print "Species present in data: ",species_line_found
 
 
+f.seek(0)  #Rewind file to read through again
 residual_tmp = []
 residual_found = False
 for Line in f:
@@ -131,6 +135,7 @@ for Line in f:
                 residual_found = True
 		break
 
+#print residual_tmp
 	
 multi_species = False
 if line_count > 1:
@@ -181,7 +186,7 @@ for Line in raw_residual_data:
 
 	#Append this timestep to the list
         residual_list = lineData[3:]
-	print "Residual data is: ",residual_list
+	#print "Residual data is: ",residual_list
 	
 
 	if( inserted_first_timestep is False):
@@ -217,20 +222,16 @@ for Line in raw_residual_data:
 #for i in range(0,len(timesteps)):
 #	print "Timestep # ",i+1
 #	timesteps[i].query_dataset()
-#	timesteps[i].get_residual(0)
 
 
 
 
 #Debug section to recreate the original input data to verify that nothing was corrupted
-for i in range(0,len(timesteps)):
-	for j in range(0,timesteps[i].get_num_iterations()):
-		print("%s  %d "%(timesteps[i].get_time(),j)),
-		for k,Residual_Name in residual_names.iteritems():
-			print(" %s "%(timesteps[i].get_residual(j,k))),
-	
-		print 
-
+#for i in range(0,len(timesteps)):
+#	for j in range(0,timesteps[i].get_num_iterations()):
+#		print("%s  %d "%(timesteps[i].get_time(),j)),
+#		for k,Residual_Name in residual_names.iteritems():
+#			print(" %s "%(timesteps[i].get_residual(j,k))),
 
 
 #Create a directory for the output
@@ -279,6 +280,7 @@ for i,Residual_name in residual_names.iteritems():
 	plt.scatter(x_vector,y_vector, marker='o')
 	plt.xlabel('Timestep Number')
 	plt.ylabel(Residual_name)
+	plt.title("Initial Residuals For Each Timestep")
 	plt.ylim([MinVal, MaxVal])
 	plt.draw
  
@@ -291,7 +293,7 @@ os.chdir("..")
 
 
 
-
+####PLOT THE TOTAL RESDUAL HISTORY###
 #Create a directory for the output
 OutputDir="all_residuals"
 if not os.path.exists(OutputDir):
@@ -312,9 +314,9 @@ print "Total number of iterations is: ", total_iterations
 #Initialize empty lists to store x and y data for plotting
 x_vector = np.zeros(total_iterations)
 y_vector = np.zeros(total_iterations)
-for i,Residual_name in residual_names.iteritems():
+for i,Residual_name in residual_names.iteritems(): #Loop for the different variables
 
-	iteration_count = 0 # Reset to zero for each new quantity
+	iteration_count = 0 # Reset to zero for each new variable
         for j in range(0,len(timesteps)):
 		for k in range(0,timesteps[j].get_num_iterations()):
                 	x_vector[iteration_count] = iteration_count + 1
@@ -322,25 +324,78 @@ for i,Residual_name in residual_names.iteritems():
                 	y_vector[iteration_count] = float( timesteps[j].get_residual(k,i) )
 			iteration_count = iteration_count + 1
 
+
         #Find the maximum value of the variable about to be plotted so that the plot vertical axis can be scaled appropriately
         MaxVal = np.amax(y_vector[:])
         MinVal = np.amin(y_vector[:])
 
-        #print "Residual bounds for ",Residual_name," -- Lower: ",MinVal,"    Upper: ",MaxVal
+        print "Residual bounds for ",Residual_name," -- Lower: ",MinVal,"    Upper: ",MaxVal
 
         #Change the min and max values a little bit so that all data lies within the bounds of the plots
         MaxVal = MaxVal + 0.05*abs(MaxVal)
         MinVal = MinVal - 0.05*abs(MinVal)
 
-        plt.scatter(x_vector,y_vector, marker='o')
-        plt.xlabel('Timestep Number')
+        plt.semilogy(x_vector,y_vector, marker='o')
+        plt.xlabel('Iteration Number')
         plt.ylabel(Residual_name)
+	plt.title("Residual History for Every Iteration")
         plt.ylim([MinVal, MaxVal])
         plt.draw
+	#plt.show()
 
         outputFileName = Residual_name + "_" + "residual_history" + ".png"
         plt.savefig(outputFileName, bbox_inches='tight')
         plt.close()
+
+
+#Go back up to the residual data directory 
+os.chdir("..")
+
+
+
+
+####PLOT THE TOTAL RESDUAL DROP WITHIN EACH TIMESTEP###
+#Create a directory for the output
+OutputDir="residual_drops"
+if not os.path.exists(OutputDir):
+        os.makedirs(OutputDir)
+        os.chdir(OutputDir)
+else:
+        os.chdir(OutputDir)
+
+
+#Initialize empty lists to store x and y data for plotting
+x_vector = np.zeros( len(timesteps) )
+y_vector = np.zeros( len(timesteps) )
+for i,Residual_name in residual_names.iteritems(): #Loop for the different variables
+        for j in range(0,len(timesteps)):
+		Residual_drop = float( timesteps[j].get_starting_residual(i) ) / float( timesteps[j].get_ending_residual(i) )
+        	x_vector[j] = timesteps[j].get_time() 
+                y_vector[j] = Residual_drop 
+
+
+        #Find the maximum value of the variable about to be plotted so that the plot vertical axis can be scaled appropriately
+        MaxVal = np.amax(y_vector[:])
+        MinVal = np.amin(y_vector[:])
+
+        print "Residual Drop bounds for ",Residual_name," -- Lower: ",MinVal,"    Upper: ",MaxVal
+
+        #Change the min and max values a little bit so that all data lies within the bounds of the plots
+        MaxVal = MaxVal + 0.05*abs(MaxVal)
+        MinVal = MinVal - 0.05*abs(MinVal)
+
+        plt.semilogy(x_vector,y_vector, marker='o')
+        plt.xlabel('Timestep Number')
+        plt.ylabel(Residual_name + ": R1/RN")
+	plt.title("Residual Drop Within Each Timestep\n(Larger is better)")
+        plt.ylim([MinVal, MaxVal])
+        plt.draw
+        #plt.show()
+
+        outputFileName = Residual_name + "_" + "residual_drop" + ".png"
+        plt.savefig(outputFileName, bbox_inches='tight')
+        plt.close()
+
 
 
 
