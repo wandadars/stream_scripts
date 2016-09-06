@@ -30,3 +30,5 @@ echo "   "   >>  res.plot
 
 
 cat res.plot | xgraph  -lw 2 -lny -fmty "%6.1e" -t "...`pwd | tail -55c`"  $@
+
+

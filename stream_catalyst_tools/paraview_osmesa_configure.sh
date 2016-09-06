@@ -44,7 +44,6 @@ cmake \
   -DOSMESA_INCLUDE_DIR=/home/neal/software/Mesa/build/include \
   -DOSMESA_LIBRARY=/home/neal/software/Mesa/build/lib64/libOSMesa.so \
   /home/neal/software/ParaView
-  $*
  
 make -j20
 make -j20 install

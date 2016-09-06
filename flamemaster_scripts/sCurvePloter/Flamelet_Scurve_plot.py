@@ -62,9 +62,11 @@ for Line in InputFile:
 		#Store column labels
 		NumColumns = len(tmp)
 		print("%d Unique column labels detected in file"%(NumColumns))
+		print"Column Labels are:"
 		ColumnLabels = []
 		for i in range(0,NumColumns):
 			ColumnLabels.append(tmp[i])
+			print ColumnLabels[i]
 
 		#print("Column label data is: \n%s"%(ColumnLabels))
 		
@@ -101,7 +103,7 @@ plt.xlabel("Stoichiometric Scalar Dissipation Rate $\chi_{st}$")
 
 DataFitString = "%s %5.2E\n %s %5.2E"%("Lowest Temperature= ",np.amin(TMax),"Max Scalar Dissipation",np.amax(chi_st))
 ax = plt.gca()
-plt.text(0.6,0.3,DataFitString,fontsize=10,transform=ax.transAxes) #uses normalized axes coordinates [0,1]
+plt.text(0.2,0.4,DataFitString,fontsize=10,transform=ax.transAxes) #uses normalized axes coordinates [0,1]
 
 #plt.draw()
 plt.show()
@@ -133,7 +135,7 @@ plt.xlabel("Stoichiometric Scalar Dissipation Rate $\chi_{st}$")
 
 DataFitString = "%s %5.2E\n %s %5.2E"%("Lowest Temperature= ",np.amin(TMax),"Max Scalar Dissipation",np.amax(chi_st))
 ax = plt.gca()
-plt.text(0.6,0.3,DataFitString,fontsize=10,transform=ax.transAxes) #uses normalized axes coordinates [0,1]
+plt.text(0.2,0.4,DataFitString,fontsize=10,transform=ax.transAxes) #uses normalized axes coordinates [0,1]
 
 #Change horizontal axis to log-scale
 ax.set_xscale('log')
@@ -184,7 +186,7 @@ plt.xlabel("Stoichiometric Scalar Dissipation Rate $\chi_{st}$")
 
 DataFitString = "%s %5.2E\n %s %5.2E"%("Lowest Temperature= ",np.amin(TMax),"Max Scalar Dissipation",np.amax(chi_st))
 ax = plt.gca()
-plt.text(0.5,0.5,DataFitString,fontsize=10,transform=ax.transAxes) #uses normalized axes coordinates [0,1]
+plt.text(0.2,0.5,DataFitString,fontsize=10,transform=ax.transAxes) #uses normalized axes coordinates [0,1]
 
 #Change horizontal axis to log-scale
 #ax.set_xscale('log')
