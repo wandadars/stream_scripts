@@ -11,10 +11,9 @@
 #
 #	Author: Christopher Neal
 #	Date   : 04/01/2016
-#	Updated: 04/01/2016
+#	Updated: 09/23/2016
 #
 ########################################################################
-
 
 class iteration_data:
 	def __init__(self,iteration_num=0,num_residuals=10,residual_list_input=None):
@@ -74,6 +73,8 @@ class timestep_data:
 		print "Number of Iterations is: ", len(self.iteration_list)
 
 
+
+
 import os #OS specific commands forreading and writing files
 import sys #For parsing user input to the script
 import numpy as np
@@ -87,6 +88,7 @@ import matplotlib.pyplot as plt
 #from matplotlib.ticker import LinearLocator, FormatStrFormatter
 
 
+num_trailing_residuals = 5  #User defined window size for looking at the final residuals for each variable
 
 #Store the name of the residual file that is to be analzed.
 Residual_File_Name = str(sys.argv[1])
@@ -122,7 +124,7 @@ for Line in f:
 	if species_line_found == True and '}' in Line:
 		break
 
-print "Species present in data: ",species_line_found
+print "Species line present in data: ",species_line_found
 
 
 f.seek(0)  #Rewind file to read through again
@@ -136,24 +138,23 @@ for Line in f:
 		break
 
 #print residual_tmp
-	
 multi_species = False
 if line_count > 1:
 	multi_species =True
 
 if(len(residual_tmp[3:]) == 4 ):  #Laminar Incompressible flow, single species(incompressible is always single secies)
-	residual_names = {0:'U Residual',1:'V Residual',2:'W Residual',3:'P Residual'}
+	residual_names = {0:'U_Residual',1:'V_Residual',2:'W_Residual',3:'P_Residual'}
 elif(len(residual_tmp[3:]) == 5): # Laminar compressible flow, single species
-	residual_names = {0:'U Residual',1:'V Residual',2:'W Residual',3:'P Residual',4:'T Residual'}
+	residual_names = {0:'U_Residual',1:'V_Residual',2:'W_Residual',3:'P_Residual',4:'T_Residual'}
 elif(len(residual_tmp[3:]) == 6):
 	if(multi_species == True): #Laminar Compressible, Multi Species
-		residual_names = {0:'U Residual',1:'V Residual',2:'W Residual',3:'P Residual',4:'T Residual',5:'Y Residual'}
+		residual_names = {0:'U_Residual',1:'V_Residual',2:'W_Residual',3:'P_Residual',4:'T_Residual',5:'Y_Residual'}
 	else: #Turbulent Inconpressible, Single Species
-		residual_names = {0:'U Residual',1:'V Residual',2:'W Residual',3:'P Residual',4:'k Residual',5:'omega Residual'}
+		residual_names = {0:'U_Residual',1:'V_Residual',2:'W_Residual',3:'P_Residual',4:'k_Residual',5:'omega_Residual'}
 elif(len(residual_tmp[3:]) == 7): #Turbulent compressible, Single species
-	residual_names = {0:'U Residual',1:'V Residual',2:'W Residual',3:'P Residual',4:'T Residual',5:'k Residual',6:'omega Residual'}
+	residual_names = {0:'U_Residual',1:'V_Residual',2:'W_Residual',3:'P_Residual',4:'T_Residual',5:'k_Residual',6:'omega_Residual'}
 elif(len(residual_tmp[3:]) == 8): #Turbulent compressible, multi species
-	residual_names = {0:'U Residual',1:'V Residual',2:'W Residual',3:'P Residual',4:'T Residual',5:'k Residual',6:'omega Residual',7:'Y Residual'}
+	residual_names = {0:'U_Residual',1:'V_Residual',2:'W_Residual',3:'P_Residual',4:'T_Residual',5:'k_Residual',6:'omega_Residual',7:'Y_Residual'}
 
 
 print "Detected residual list is: ", residual_names
@@ -182,7 +183,6 @@ for Line in raw_residual_data:
 	
 	iteration_counter = lineData[2] 
 	#print "Iteration number is: ",iteration_counter
-
 
 	#Append this timestep to the list
         residual_list = lineData[3:]
@@ -216,13 +216,12 @@ for Line in raw_residual_data:
 		#timesteps[timesteps_counter].query_dataset()
 	
 
+print "Numer of timesteps detected: ",len(timesteps)
 
 #Debug
-#print "Numer of timesteps detected: ",len(timesteps)
 #for i in range(0,len(timesteps)):
 #	print "Timestep # ",i+1
 #	timesteps[i].query_dataset()
-
 
 
 
@@ -244,10 +243,7 @@ else:
 
 #Now plot the data
 
-
-
 #Plot the total residual drop across every single iteration(timestep and internal iterations per timestep)
-
 
 #Create a directory for the output
 OutputDir="starting_residuals"
@@ -310,7 +306,6 @@ for Time in timesteps:
 
 print "Total number of iterations is: ", total_iterations
 	
-
 #Initialize empty lists to store x and y data for plotting
 x_vector = np.zeros(total_iterations)
 y_vector = np.zeros(total_iterations)
@@ -335,7 +330,7 @@ for i,Residual_name in residual_names.iteritems(): #Loop for the different varia
         MaxVal = MaxVal + 0.05*abs(MaxVal)
         MinVal = MinVal - 0.05*abs(MinVal)
 
-        plt.semilogy(x_vector,y_vector, marker='o')
+        plt.semilogy(x_vector,y_vector, linestyle='None',marker='o')
         plt.xlabel('Iteration Number')
         plt.ylabel(Residual_name)
 	plt.title("Residual History for Every Iteration")
@@ -384,9 +379,9 @@ for i,Residual_name in residual_names.iteritems(): #Loop for the different varia
         MaxVal = MaxVal + 0.05*abs(MaxVal)
         MinVal = MinVal - 0.05*abs(MinVal)
 
-        plt.semilogy(x_vector,y_vector, marker='o')
+        plt.semilogy(x_vector,y_vector, linestyle='None',marker='o')
         plt.xlabel('Timestep Number')
-        plt.ylabel(Residual_name + ": R1/RN")
+        plt.ylabel(Residual_name + " Drop"+ ": R1/RN")
 	plt.title("Residual Drop Within Each Timestep\n(Larger is better)")
         plt.ylim([MinVal, MaxVal])
         plt.draw
@@ -396,6 +391,60 @@ for i,Residual_name in residual_names.iteritems(): #Loop for the different varia
         plt.savefig(outputFileName, bbox_inches='tight')
         plt.close()
 
+#Go back up to the residual data directory 
+os.chdir("..")
+
+
+
+
+####PLOT THE HISTORY OF THE FINAL FEW TIMESTEPS' RESDUALS WITHIN EACH TIMESTEP###
+#Create a directory for the output
+OutputDir="trailing_residuals"
+if not os.path.exists(OutputDir):
+        os.makedirs(OutputDir)
+        os.chdir(OutputDir)
+else:
+        os.chdir(OutputDir)
+
+#Determine the number of iterations in the last num_trailing_iterations timesteps
+total_iterations = 0
+for Time in timesteps[-num_trailing_residuals:]:
+        total_iterations = total_iterations + Time.get_num_iterations()
+
+#Initialize empty lists to store x and y data for plotting
+x_vector = np.zeros( total_iterations )
+y_vector = np.zeros( total_iterations )
+for i,Residual_name in residual_names.iteritems(): #Loop for the different variables
+
+	iteration_count = 0 # Reset to zero for each new variable
+        for j in range(len(timesteps) - num_trailing_residuals + 1, len(timesteps)):
+                for k in range(0,timesteps[j].get_num_iterations()):
+                        x_vector[iteration_count] = iteration_count + 1
+                        #print timesteps[j].get_residual(k,i)
+                        y_vector[iteration_count] = float( timesteps[j].get_residual(k,i) )
+                        iteration_count = iteration_count + 1
+
+        #Find the maximum value of the variable about to be plotted so that the plot vertical axis can be scaled appropriately
+        MaxVal = np.amax(y_vector[:])
+        MinVal = np.amin(y_vector[:])
+
+        print "Residual bounds for ",Residual_name," -- Lower: ",MinVal,"    Upper: ",MaxVal
+
+        #Change the min and max values a little bit so that all data lies within the bounds of the plots
+        MaxVal = MaxVal + 0.05*abs(MaxVal)
+        MinVal = MinVal - 0.05*abs(MinVal)
+
+        plt.semilogy(x_vector,y_vector, marker='o')
+        plt.xlabel('Iteration Number')
+        plt.ylabel(Residual_name)
+        plt.title("Residual History ")
+        plt.ylim([MinVal, MaxVal])
+        plt.draw
+        #plt.show()
+
+        outputFileName = Residual_name + "_" + "trailing_residual" + ".png"
+        plt.savefig(outputFileName, bbox_inches='tight')
+        plt.close()
 
 
 
