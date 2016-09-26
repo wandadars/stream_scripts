@@ -1,3 +1,4 @@
 # Linux swap files when opening a file 
 *.swp
+*.DS_Store
 
