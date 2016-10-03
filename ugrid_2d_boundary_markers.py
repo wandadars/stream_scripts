@@ -15,6 +15,7 @@
 
 import os #OS specific commands forreading and writing files
 import sys #For parsing user input to the script
+import time
 
 #Store the name of the file that the user wants to plot the from.
 input_file_name = str(sys.argv[1])
@@ -47,27 +48,39 @@ lines = f.readline()
 line = lines.rstrip()
 line = line.split()
 		
-num_nodes = line[0]
-num_trias = line[1]
-num_quads = line[2]
-num_tets = line[3]
-num_5pents = line[4]
-num_6pents = line[5]
-num_hexs = line[6]
+num_nodes = int( line[0] )
+num_trias = int( line[1] )
+num_quads = int( line[2] )
+num_tets = int( line[3] )
+num_5pents = int( line[4] )
+num_6pents = int( line[5] )
+num_hexs = int( line[6] )
 line_count = line_count + 1
+
+print "Detected Info In File:"
+print "Number of Nodes: ", num_nodes
+print "Number of Surface Triangle Elements: ", num_trias
+print "Number of Surface Quadrilateral Elements: ", num_quads
+print "Number of Volume Tetrahedral Elements: ", num_tets
+print "Number of Volume 5-Point Pentahedral Elements(Pyramid): ", num_5pents
+print "Number of Volume 6-Point Pentahedral Elements(Prism): ", num_6pents
+print "Number of Volume Hexahedral Elements: ", num_hexs
 
 
 #loop over the node data, but don't store
-while True:
-  lines = f.readline()
-  line = lines.rstrip()
-  line = line.split()
-  line_count = line_count + 1
-  if line_count > num_nodes : 
-    break
+print "Skimming Node Data..."
+Done = False
+while Done == False:
+	lines = f.readline()
+	line = lines.rstrip()
+	line = line.split()
+	line_count = line_count + 1
+	if line_count > num_nodes : 
+		Done = True
 
 
 #loop over the connectivity data, but don't store
+print "Skimming Connectivity Data..."
 while True:
   lines = f.readline()
   line = lines.rstrip()
@@ -77,8 +90,10 @@ while True:
     break
 
 
+
 boundary_id_markers = []
 #loop over the node data, but don't store
+print "Collecting All Boundary Face Markers..."
 while True:
   lines = f.readline()
   line = lines.rstrip()
@@ -88,8 +103,9 @@ while True:
 
   boundary_id_markers.append(line)
 
+print type( boundary_id_markers)
 
-unique_boundary_id_markers = boundary_id_markers.set()
+unique_boundary_id_markers = list(set(boundary_id_markers))
 
 #Print the unique boundary marker ids
 print 'Unique Boundary Markers are: ',unique_boundary_id_markers
