@@ -63,7 +63,7 @@ XMax = 210e-3
 
 nYBins = 4
 YMin = 0.0
-YMax = 2.1e-3  #Old value 15.75e-3
+YMax = 21e-3  #Old value 15.75e-3
 
 """
 #Particle statistics user definition section
@@ -296,7 +296,7 @@ else:
 #Write the output so that all of the Y data for a particular X bin is contained within 1 file. The file will match in essence the
 #format used for the experimental data file so that post-processing the data will be made faster.
 for i in range(0,nXBins):
-        OutputFileName = CaseName + "_PDF_" + '%s_%4.2f_Data'%('XOverD_',PDF_X_Coords[i]/Dl) + ".txt"
+        OutputFileName = CaseName + "_PDF_" + '%s_%4.2f_Data'%('XOverD',PDF_X_Coords[i]/Dl) + ".txt"
         f_output = open(OutputFileName,"w")
 
 	f_output.write("%s\t%s %10.6E\n"%("X Coordinate","X/D = ",PDF_X_Coords[i]/Dl))
@@ -387,7 +387,7 @@ for i in range(0,nXBins):
 		else:
 			DimensionName = 'Y'
 
-		outputFileName = CaseName + '_PDF_' + '%s%4.2f%s'%('X',PDF_X_Coords[i]/Dl,'_')+ '%s%4.2f%s'%(DimensionName,PDF_Y_Coords[j]/Dl,'_') + ".png"
+		outputFileName = CaseName + '_PDF_' + '%s%4.2f%s'%('XoverD',PDF_X_Coords[i]/Dl,'_') + '%s%4.2f%s'%(DimensionName,PDF_Y_Coords[j]/Dl) + ".png"
 		print("Saving a figure to:%s\n"%(outputFileName))
 		plt.savefig(outputFileName, bbox_inches='tight')
 		plt.close()
