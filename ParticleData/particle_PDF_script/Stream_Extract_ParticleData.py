@@ -50,18 +50,18 @@ RadialBinFlag = 1 # 0 for cartesian y bins, 1 for cylindrical R bins. If 1, trea
 Dl = 0.0105 #Diameter of liquid injection
 
 #Start & Stop value of particle data file indices
-iStart = 6000
+iStart = 10000
 iStep = 200
-iEnd = 7000
+iEnd = 12000
 
 
 
 #Particle statistics user definition section
 nXBins = 2
 XMin = 0.0
-XMax = 105e-3
+XMax = 210e-3
 
-nYBins = 2
+nYBins = 4
 YMin = 0.0
 YMax = 2.1e-3  #Old value 15.75e-3
 
@@ -281,7 +281,17 @@ if(BinFlag == 1): #Use the user defined bins
 
 
 
+
 print("Writing Output Data")
+
+#Create output directory and enter the directory
+FilePathBase =os.getcwd()
+OutPutDir = FilePathBase +"/particle_PDF_data"
+if not os.path.exists(OutPutDir):
+        os.makedirs(OutPutDir)
+        os.chdir(OutPutDir)
+else:
+        os.chdir(OutPutDir)
 
 #Write the output so that all of the Y data for a particular X bin is contained within 1 file. The file will match in essence the
 #format used for the experimental data file so that post-processing the data will be made faster.
@@ -384,7 +394,7 @@ for i in range(0,nXBins):
 
 
 #Go back to the original data directory
-os.chdir("..")
+os.chdir("../..")
 
 
 print("\n Program has finished... \n")
