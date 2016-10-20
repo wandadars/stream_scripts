@@ -201,7 +201,7 @@ class ParticleBinData:
 		#sort nicely into the user defined bins.
 		#Input is a 2D list, 2xN with the first and second rows holding the left and right coordinates of the edges of a bin, respectively.
 
-		if(self.NumElements>0):
+		#if(self.NumElements>0):
 
 			#CheckSum for error checking
                 	CheckSum1 = 0.0
@@ -254,6 +254,8 @@ class ParticleBinData:
                 	        print("Warning - Customizing Bins process has lost data, which may be due to existing data being outside of user-defined bin values")
 				print("Magnitude of Error: %10.6E"%(abs(CheckSum1 - CheckSum2)))
 
+
+			
 
 
 	def __add__(self,other):
