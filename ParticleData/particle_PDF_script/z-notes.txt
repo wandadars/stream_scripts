@@ -1,0 +1,1 @@
+The path to the HDF5 installation should be changed in the  Extract_HDF5_data.sh file
