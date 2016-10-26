@@ -15,7 +15,7 @@
 #     by the Python program
 
 
-h5dump --noindex $1 > tempPythonFile.txt &
+/home/neal/software/hdf5-1.8.17-install/bin/h5dump --noindex $1 > tempPythonFile.txt &
 wait
 
 
