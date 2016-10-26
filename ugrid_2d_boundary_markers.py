@@ -90,7 +90,6 @@ while True:
     break
 
 
-
 boundary_id_markers = []
 #loop over the node data, but don't store
 print "Collecting All Boundary Face Markers..."
@@ -100,17 +99,13 @@ while True:
   line = line.split()
   if len(line) > 1:
     break
+  boundary_id_markers.append(line[0])
 
-  boundary_id_markers.append(line)
-
-print type( boundary_id_markers)
-
-unique_boundary_id_markers = list(set(boundary_id_markers))
+#Collect only the most unique boundary markers
+unique_boundary_id_markers = sorted(list(set(boundary_id_markers)))
 
 #Print the unique boundary marker ids
 print 'Unique Boundary Markers are: ',unique_boundary_id_markers
-
-
 
 print("\n Program has finished... \n")
 
