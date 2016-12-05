@@ -8,7 +8,7 @@
 # Author: Christopher Neal
 #
 # Date: 07-09-2015
-# Updated: 07-09-2015
+# Updated: 12-01-2016
 #
 #######################################################################################
 
@@ -29,6 +29,8 @@
 ExtractString="v P r t a"
 CaseName="case"
 OutputFormat="en"
+
+RunString="/home/jeff/software/Loci-3.3-p3/Loci-Linux-x86_64-mpic++-rel-3-3-p3/bin/extract" 
 
 echo 'Running Loci-Stream Post-Processing Chain Submission Script'
 
@@ -85,7 +87,7 @@ if [ $(($c%$1)) == 0 ]; then #Check to see if the file is a multiple of the stri
 
       echo "Running extract on file $c for post-processing timestamp: $line1 "
    
-      extract -$OutputFormat $CaseName $line1 $ExtractString
+      $RunString -$OutputFormat $CaseName $line1 $ExtractString
 
   
    else
@@ -94,7 +96,7 @@ if [ $(($c%$1)) == 0 ]; then #Check to see if the file is a multiple of the stri
          
          echo "Running extract on file $c for post-processing timestamp: $line1 "
 
-         extract -$OutputFormat $CaseName $line1 $ExtractString
+         $RunString -$OutputFormat $CaseName $line1 $ExtractString
 
       fi #$c -ge $2
 
