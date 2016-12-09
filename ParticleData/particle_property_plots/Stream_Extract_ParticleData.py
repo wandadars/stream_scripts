@@ -31,12 +31,12 @@ from Read_hdf5_particle import *
 #For calling the h5dump shell script
 ShellScriptPath="/home/neal/codes/locistream/stream_scripts/ParticleData/particle_property_plots"
 
-delta_t = 1.0e-1  #Iterations are not ascribed a time, so a mapping must be done
+delta_t = 1.0e-2  #Iterations are not ascribed a time, so a mapping must be done
 
 #Start & Stop value of particle data file indices
-iStart = 9000
-iStep = 200
-iEnd = 12800
+iStart = 20
+iStep = 20
+iEnd = 18000
 
 #Compute and store data filename numbers
 NumFiles = (iEnd-iStart)/iStep
@@ -104,6 +104,8 @@ f_output.close()
 
 #####Plot output data##########
 
+window_buffer_factor = 0.01
+
 #Find the maximum value of the temperature variable about to be plotted so that the 
 #plot vertical axis can be scaled appropriately
 for k,temp in enumerate(particle_temperatures):
@@ -117,8 +119,8 @@ for k,temp in enumerate(particle_temperatures):
 			
 
 #Change the min and max values a little bit so that all data lies within the bounds of the plots
-MaxVal = MaxVal + 0.05*abs(MaxVal)
-MinVal = MinVal - 0.05*abs(MinVal)
+MaxVal = MaxVal + window_buffer_factor*abs(MaxVal)
+MinVal = MinVal - window_buffer_factor*abs(MinVal)
 			
 
 xValues = np.asarray(time_steps)
@@ -149,8 +151,8 @@ for k,temp in enumerate(particle_diameters):
 
 
 #Change the min and max values a little bit so that all data lies within the bounds of the plots
-MaxVal = MaxVal + 0.05*abs(MaxVal)
-MinVal = MinVal - 0.05*abs(MinVal)
+MaxVal = MaxVal + window_buffer_factor*abs(MaxVal)
+MinVal = MinVal - window_buffer_factor*abs(MinVal)
 
 
 xValues = np.asarray(time_steps)
