@@ -36,7 +36,7 @@ delta_t = 1.0e-2  #Iterations are not ascribed a time, so a mapping must be done
 #Start & Stop value of particle data file indices
 iStart = 20
 iStep = 20
-iEnd = 18000
+iEnd = 79800
 
 #Compute and store data filename numbers
 NumFiles = (iEnd-iStart)/iStep
@@ -167,6 +167,7 @@ outputFileName = CaseName + '_diameter_history'+".png"
 print("Saving a figure to:%s\n"%(outputFileName))
 plt.savefig(outputFileName, bbox_inches='tight')
 plt.close()
+
 
 #Go back to the original data directory
 os.chdir("../..")

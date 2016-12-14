@@ -3,32 +3,37 @@
 # Purpose:      Takes user defined input for min, max, and stepsize of the Scalar Dissipation
 #		Rate & generates an output file for copying into the FlameMaster input file.
 #
-# Input:        None.
+# Input:        s_min, s_max, delta_s
 #
 # Output:       A S_Values.txt file for use in FlameMaster input file.
 #
 #
 #       Authors: Christopher Neal
 #       Date   : 03/18/2016
-#       Updated: 03/18/2016
+#       Updated: 12/14/2016
 #
 ########################################################################
 
 import numpy as np
-
+import argparse
 
 OutputFileName = 'S_Values.txt'
 OutputString = 'Scalar DissipationRate = '
 
-S_Min = 2e5
-S_Max = 1e6
-DeltaS = 33e3
+parser = argparse.ArgumentParser()
+parser.add_argument("s_min", help="Minimum value of scalar dissipation rate for range")
+parser.add_argument("s_max", help="Maximum value of scalar dissipation rate for range")
+parser.add_argument("num_s", help="Number of points to add between the minimum and maximum ranges")
+args = parser.parse_args()
 
+print "Provided value of s_min: ",args.s_min
+print "Provided value of s_max: ",args.s_max
+print "Provided value of num_s: ",args.num_s
 
-#Testcase for perfect match
-#S_Min = 2e5
-#S_Max = 3e5
-#DeltaS = 1e4
+s_min = float(args.s_min)
+s_max = float(args.s_max)
+num_s = float(args.num_s)
+
 
 ##WRITE DATA TO OUTPUT FILE
 
@@ -43,12 +48,13 @@ except:
 #Determine the number of entries that will be printed(including the provided bounds)
 NumEntries = 1
 done = False
-SValue = S_Min
+SValue = s_min
+delta_s = (s_max - s_min)/(num_s + 1)
 while(done == False):
 
-	SValue = SValue + DeltaS
+	SValue = SValue + delta_s
 
-	if(SValue >= S_Max):
+	if(SValue >= s_max):
 		done = True
 
 	NumEntries = NumEntries + 1
@@ -56,9 +62,9 @@ while(done == False):
 print("%d entries will be printed to the output file"%(NumEntries))
 
 
-StartValue = S_Min
-FinalValue = S_Max
-IncValue = DeltaS
+StartValue = s_min
+FinalValue = s_max
+IncValue = delta_s
 FlipFlag = False
 
 print("Starting Value is %10.6E"%StartValue)
