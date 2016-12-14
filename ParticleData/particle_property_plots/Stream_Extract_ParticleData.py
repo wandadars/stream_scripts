@@ -77,8 +77,8 @@ for i in range(0,NumFiles):
     particle_diameters.append(ParticleData[0][0])
 
 
-print particle_temperatures
-print particle_diameters
+#print particle_temperatures
+#print particle_diameters
 
 print("Writing Output Data")
 
@@ -154,7 +154,6 @@ for k,temp in enumerate(particle_diameters):
 MaxVal = MaxVal + window_buffer_factor*abs(MaxVal)
 MinVal = MinVal - window_buffer_factor*abs(MinVal)
 
-
 xValues = np.asarray(time_steps)
 yValues = np.asarray(particle_diameters)
 
@@ -164,6 +163,22 @@ plt.ylabel('Particle Diameter, D(Meters)')
 plt.ylim([MinVal, MaxVal])
 
 outputFileName = CaseName + '_diameter_history'+".png"
+print("Saving a figure to:%s\n"%(outputFileName))
+plt.savefig(outputFileName, bbox_inches='tight')
+plt.close()
+
+
+
+#Plot the square of the diamter(for evaporation cases this is a useful metric. See D-squared law)
+xValues = np.asarray(time_steps)
+yValues = np.square(np.asarray(particle_diameters))
+
+plt.plot(xValues,yValues, marker='o')
+plt.xlabel('Time, t (seconds)')
+plt.ylabel('Particle Diameter Squared, D^2(Meters^2)')
+plt.ylim([MinVal, MaxVal])
+
+outputFileName = CaseName + '_square_diameter_history'+".png"
 print("Saving a figure to:%s\n"%(outputFileName))
 plt.savefig(outputFileName, bbox_inches='tight')
 plt.close()
