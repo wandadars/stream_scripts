@@ -126,7 +126,7 @@ for i,variable in enumerate(variable_names):
     MaxVal = MaxVal + 0.05*abs(MaxVal)
     MinVal = MinVal - 0.05*abs(MinVal)
  
-    plt.plot(Data[:,0],Data[:,i], marker='o')
+    plt.plot(Data[:,1],Data[:,i], linestyle='None', marker='o')
     plt.xlabel('Time (Seconds)')
     plt.ylabel(variable)
     plt.ylim([MinVal, MaxVal])
