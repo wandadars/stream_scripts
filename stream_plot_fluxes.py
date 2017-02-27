@@ -76,7 +76,7 @@ except IOError as e:
 #Data in the file is structured in the following way:
 #iteration, simulation time, mass_flux, Fx, Fy, Fz, energy flux, area
 
-variable_names = ['iteration','time','mass_flux','Fx','Fy','Fz','energy_flux','area']
+variable_names = ['timestep_number','time','mass_flux','Fx','Fy','Fz','energy_flux','area']
 
 Data = np.zeros((non_blank_count,len(variable_names)))
 count = 0 #For placing items into array
@@ -85,11 +85,14 @@ for Line in f:
 	lineData = Line.rstrip()
 	lineData = lineData.split()
 		
-	Data[count,0] = lineData[1]  # simulation time
-	Data[count,1] = lineData[3]  # Fx
-	Data[count,2] = lineData[4]  # Fy
-	Data[count,3] = lineData[5]  # Fz
-
+	Data[count,0] = lineData[0]  
+	Data[count,1] = lineData[1]  
+	Data[count,2] = lineData[2]  
+	Data[count,3] = lineData[3]  
+	Data[count,4] = lineData[4]  
+	Data[count,5] = lineData[5]  
+        Data[count,6] = lineData[6]  
+	Data[count,7] = lineData[7]  
 	count = count + 1
 
 f.close()
