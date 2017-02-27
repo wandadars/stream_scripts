@@ -116,17 +116,17 @@ else:
 
 #Now plot the data 
 
-for variable in variable_names:
+for i,variable in enumerate(variable_names):
 
     #Find the maximum value of the variable about to be plotted so that the plot vertical axis can be scaled appropriately
-    MaxVal = np.amax(Data[:,1])
-    MinVal = np.amin(Data[:,1])
+    MaxVal = np.amax(Data[:,i])
+    MinVal = np.amin(Data[:,i])
 
     #Change the min and max values a little bit so that all data lies within the bounds of the plots
     MaxVal = MaxVal + 0.05*abs(MaxVal)
     MinVal = MinVal - 0.05*abs(MinVal)
  
-    plt.plot(Data[:,0],Data[:,1], marker='o')
+    plt.plot(Data[:,0],Data[:,i], marker='o')
     plt.xlabel('Time (Seconds)')
     plt.ylabel(variable)
     plt.ylim([MinVal, MaxVal])
