@@ -117,7 +117,7 @@ else:
 #Now plot the data 
 for i,variable in enumerate(variable_names):
 
-    if variable not in ('time','timestep_number'):
+    if variable != 'time' and variable != 'timestep_number':
         #Find the maximum value of the variable about to be plotted so that the plot vertical axis can be scaled appropriately
         MaxVal = np.amax(Data[:,i])
         MinVal = np.amin(Data[:,i])
