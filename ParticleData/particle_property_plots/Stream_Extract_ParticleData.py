@@ -34,9 +34,9 @@ ShellScriptPath="/home/neal/codes/locistream/stream_scripts/ParticleData/particl
 delta_t = 1.0e-2  #Iterations are not ascribed a time, so a mapping must be done
 
 #Start & Stop value of particle data file indices
-iStart = 20
-iStep = 20
-iEnd = 79800
+iStart = 100
+iStep = 100
+iEnd = 79900
 
 #Compute and store data filename numbers
 NumFiles = (iEnd-iStart)/iStep
@@ -171,7 +171,10 @@ plt.close()
 
 #Plot the square of the diamter(for evaporation cases this is a useful metric. See D-squared law)
 xValues = np.asarray(time_steps)
-yValues = np.square(np.asarray(particle_diameters))
+yValues = np.asarray(particle_diameters)
+yValues = np.square(yValues.astype(float))
+MaxVal = MaxVal*MaxVal
+MinVal = MinVal*MinVal
 
 plt.plot(xValues,yValues, marker='o')
 plt.xlabel('Time, t (seconds)')
