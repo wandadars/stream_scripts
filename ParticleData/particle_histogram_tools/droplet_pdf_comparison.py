@@ -4,7 +4,7 @@
 # function data for particle diameter distributions away from a spray jet and plot
 # the data.
 #
-# Author: Christopher Neal
+#: Author Christopher Neal
 #
 # Date: 02-15-2016
 # Updated: 05-19-2016
@@ -25,17 +25,16 @@ from droplet_histogram_tools import particle_histogram
 #Specify the path to the Data file that contains the formatted slice data
 
 #Experimental Data Set
-ExpInputFileName="SP2_xD10_DropDis.dat"
-ExpFilePathBase = "/Users/chris1/Dropbox/Streamine_Numerics/Stream_VV_Cases/Fall_2015_Cases/Droplet_Vaporization/Acetone-non-reacting/Experiment_A/Non_reacting_spray_jets/SP2/xD_10/Droplet_Distribution"
+ExpInputFileName="AcF3_xD10_DropDis.dat"
+ExpFilePathBase = "/home/neal/st_animation/output/particle_PDF_data"
 
 #"""
 #Simulation Data set
-SimInputFileName="acetone_PDF_XOverD_15.00_Data.txt"
-#FilePathBase = "/Users/chris1/Desktop/PDFPlots"
-SimFilePathBase = "/Users/chris1/Dropbox/Streamine_Numerics/Stream_VV_Cases/Fall_2015_Cases/Droplet_Vaporization/data_analysis_scripts/SP2_SprayJetWithBreakup_LPT_Smoothing_Comparison/particle_PDF_data_noSmoothing"
+SimInputFileName="acetone_PDF_XOverD_10.00_Data.txt"
+SimFilePathBase = "/home/neal/st_animation/output/particle_PDF_data"
 #"""
 
-OutputFileName = "acetone_PDF_ExpXOverD_10_SimXoverD2.5_Data_NumberedWeightedLogFit" #User changes this
+OutputFileName = "acetone_PDF_ExpXOverD_10_SimXoverD_10_Data_NumberedWeightedLogFit" #User changes this
 
 #Debug flag
 DebugFlag = 1	#0 for off, 1 for on
@@ -87,27 +86,27 @@ simulation_data.rescale_bin_values(SimDiameterConversionFactor)
 
 
 if(DebugFlag == 1):
-	#Print the bin values to screen
-	tmpData = experimental_data.get_horizontal_bins()
-	for i in range( 0,experimental_data.get_num_bins() ):
-		print("%4.2E\n"%(tmpData[i]))
+    #Print the bin values to screen
+    tmpData = experimental_data.get_horizontal_bins()
+    for i in range( 0,experimental_data.get_num_bins() ):
+            print("%4.2E\n"%(tmpData[i]))
 
-        tmpData = simulation_data.get_horizontal_bins()
-        for i in range(0,simulation_data.get_num_bins()):
-               print("%4.2E\n"%(tmpData[i]))
+    tmpData = simulation_data.get_horizontal_bins()
+    for i in range(0,simulation_data.get_num_bins()):
+           print("%4.2E\n"%(tmpData[i]))
 
 
 
 if(MassWeightedFlag == 1):
-	experimental_data.compute_volume_weighted_pdf(overwrite_pdfs=True)
+    experimental_data.compute_volume_weighted_pdf(overwrite_pdfs=True)
 
 #Normalize the histogram to bring it into line with approximating a PDF
 experimental_data.normalize_pdf()
 simulation_data.normalize_pdf()
 
 #Plot pdf to see how it looks
-experimental_data.plot_histogram()
-simulation_data.plot_histogram()
+#experimental_data.plot_histogram()
+#simulation_data.plot_histogram()
 
 """
 #For Debugging plot the pdf
@@ -181,8 +180,10 @@ print SimHorizontalBins
 
 Exppdf = np.asarray(experimental_data.get_pdf())
 Expwidth = np.asarray(experimental_data.get_widths())
+
 Simpdf = np.asarray(experimental_data.get_pdf())
 Simwidth = np.asarray(experimental_data.get_widths())
+
 
 ExpBinmin = min(ExpHorizontalBins)
 ExpBinMax = max(ExpHorizontalBins)
@@ -223,7 +224,7 @@ else:
 	plt.xlabel("Diameter ($\mu$meters)")
 
 plt.draw()
-#plt.show(block=True)
+plt.show(block=True)
 
 
 """
