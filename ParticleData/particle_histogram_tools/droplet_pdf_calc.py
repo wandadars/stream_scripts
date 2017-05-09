@@ -26,9 +26,12 @@ from droplet_histogram_tools import particle_histogram
 
 #"""
 #Experimental Data Set
-InputFileName="AcF3_xD0.3_DropDis.dat"
-FilePathBase = "/Users/chris1/Dropbox/Streamine_Numerics/Stream_VV_Cases/Fall_2015_Cases/Droplet_Vaporization/SprayJetData_Masri/Acetone_Flames/Acetone reacting/Experiment A/Acetone_Flames/AcF3/xD_0.3/Droplet_Distribution"
+InputFileName="acetone_PDF_XOverD_10.00_Data.txt"
+FilePathBase = "/home2/neal/temp/2d_pieslice/output/particle_PDF_data_old"
 OutputFileName = "AcF3_xD0.3_DropDis_MassWeightedLog_WeibullFit" #User changes this
+#InputFileName="AcF3_xD0.3_DropDis.dat"
+#FilePathBase = "/Users/chris1/Dropbox/Streamine_Numerics/Stream_VV_Cases/Fall_2015_Cases/Droplet_Vaporization/SprayJetData_Masri/Acetone_Flames/Acetone reacting/Experiment A/Acetone_Flames/AcF3/xD_0.3/Droplet_Distribution"
+#OutputFileName = "AcF3_xD0.3_DropDis_MassWeightedLog_WeibullFit" #User changes this
 #OutputFileName = "SP2_xD0.3_DropDis_NumberedWeightedLogFit" #User changes this
 #"""
 
@@ -59,7 +62,7 @@ WeibullPlotFlag = 1  #1 to fit data to Weibull distribution and show on plots, 0
 RadiusAverageFlag = 1	# 0 - only take first value, 1 - average over all radial PDFs in data file
 
 #Provide the density of the liquid for converting number weighted droplet diameter PDFs to mass weighted droplet mass PDF.
-MassWeightedFlag = 1	# 0 for using the original diameter data, 1 for converting to mass weighted PDF
+MassWeightedFlag = 0	# 0 for using the original diameter data, 1 for converting to mass weighted PDF
 #LiquidDensity = 791  #kg/m^3
 LiquidDensity = 791e12	#kg/micrometersm^3
 
@@ -73,8 +76,8 @@ PlotResolution = 500  #Desired dpi of plot
 #Factor required to convert diameter data in experimental data file to fundamental unit e.g. if file 
 #has diameters listed in terms of micrometers, then the factor needs to be 1e-6 to convert back to meters.
 #This is necessary for the section that computes the mass of the particles
-DiameterConversionFactor = 1.0e-6  #For experimental dataset
-#DiameterConversionFactor = 1.0  #For simulation dataset 
+#DiameterConversionFactor = 1.0e-6  #For experimental dataset
+DiameterConversionFactor = 1.0  #For simulation dataset 
 
 DiameterPlotFactor = 1.0e6 #Factor for scaling the horizontal axis of diameter - for experimental data
 #DiameterPlotFactor = 1.0e6 #Factor for scaling the horizontal axis of diameter - for simulation data

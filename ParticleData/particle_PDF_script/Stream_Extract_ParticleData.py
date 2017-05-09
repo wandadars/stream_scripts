@@ -40,8 +40,8 @@ ShellScriptPath="/home/neal/codes/locistream/stream_scripts/ParticleData/particl
 BinFlag = 1 #1 for using diameter bins and 0 for no bins when computing PDF
 
 Diameter_Min = 0.0
-Diameter_Max = 100.0e-6
-nDBins = 100
+Diameter_Max = 150.0e-6
+nDBins = 150
 
 
 #Radial Bins Information: There is an implicit assumption that the axis of the jet corresponds to y=0, therefore allowing for the following formula to be used: r = sqrt(y^2 + z^2)
@@ -51,9 +51,9 @@ RadialBinFlag = 0 # 0 for cartesian y bins, 1 for cylindrical R bins. If 1, trea
 Dl = 0.0105 #Diameter of liquid injection
 
 #Start & Stop value of particle data file indices
-iStart = 6000
+iStart = 10000
 iStep = 100
-iEnd = 11000
+iEnd = 21000
 
 
 #Particle statistics user definition section
@@ -61,9 +61,12 @@ nXBins = 3
 XMin = 0.0
 XMax = 210e-3 
 
-nYBins = 4
+nYBins = 6
 YMin = 0.0
-YMax = 21e-3  #Old value 15.75e-3
+YMax = 10.5e-3  
+#nYBins = 4
+#YMin = 0.0
+#YMax = 21e-3  #Old value 15.75e-3
 
 """
 #Particle statistics user definition section
@@ -95,9 +98,9 @@ particle_bin_domain = ParticleBinDomain(XMax,XMin,YMax,YMin,nXBins,nYBins)
 
 #Compute Bin coordinates
 X_Bin_Coords = particle_bin_domain.compute_x_bin_coords()
-particle_bin_domain.print_x_bin_coords()
+particle_bin_domain.print_x_bin_coords(Dl)
 Y_Bin_Coords = particle_bin_domain.compute_y_bin_coords() 
-particle_bin_domain.print_y_bin_coords()
+particle_bin_domain.print_y_bin_coords(Dl)
 
 #Store the casename from the user's input to the script
 CaseName = str(sys.argv[1])
@@ -128,14 +131,13 @@ for i,time_stamp in enumerate(FileIndicies):
 	#Read particle data from HDF5 data files
 	print("Reading Data from file: %d"%(i+1))
 	hdf5_data_reader = HDF5_Particle_Data_Reader(CaseName,time_stamp,ShellScriptPath)
-        print type(hdf5_data_reader)
         ParticleData = hdf5_data_reader.read_hdf_particle_data()  
 
 	#Compute size of ParticleData 2D list
 	numrows = len(ParticleData)  
         numcols = len(ParticleData[0])
 
-	print("Number of parcels in dataset %d :\t%10.6E"%(i+1,numrows))
+	print("Number of parcels in dataset %d :\t%d"%(i+1,numrows))
 
 	#Now we have all particle data in the file we now process the data
         #Allocate a numpy array to store the floating point data & copy into array
@@ -338,7 +340,7 @@ for i in range(0,nXBins):
         
         yValues = np.asarray(AVG_PDF[i][j].ParticlesPerParcel)
 
-        plt.plot(xValues,yValues, marker='o')
+        plt.plot(xValues,yValues, marker='o',linestyle='None')
         plt.xlabel('Parcel Diameter, D micrometer')
         plt.ylabel('Parcel Count, N')
         plt.ylim([MinVal, MaxVal])
@@ -348,7 +350,7 @@ for i in range(0,nXBins):
         else:
             DimensionName = 'Y'
 
-        outputFileName = CaseName + '_PDF_' + '%s%4.2f%s'%('XoverD',PDF_X_Coords[i]/Dl,'_') + '%s%4.2f'%(DimensionName,PDF_Y_Coords[j]/Dl) + ".png"
+        outputFileName = CaseName + '_PDF_' + '%s%4.2f%s'%('XoverD',PDF_X_Coords[i]/Dl,'_') + '%soverD%4.2f'%(DimensionName,PDF_Y_Coords[j]/Dl) + ".png"
         print("Saving a figure to:%s\n"%(outputFileName))
         plt.savefig(outputFileName, bbox_inches='tight')
         plt.close()

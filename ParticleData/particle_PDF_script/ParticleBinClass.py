@@ -26,11 +26,21 @@ class ParticleBinDomain:
         
         return x_bin_coords
 
-    def print_x_bin_coords(self):
+    def print_x_bin_coords(self,non_dimensional_factor=None):
         x_bin_coords = self.compute_x_bin_coords()
         print("\n\nX Bin Coordinates are:")
+        table_header = "{:<11} {:<15} {:<15}{:<10}".format('Bin #','Min','Max','Center')
+        if non_dimensional_factor is not None:
+            table_header = "{}\t{:<}".format(table_header,'Non-Dimensional Center')
+        print(table_header)
+
         for i in range(0,self.num_x_bins):
-            print("Bin %d \t%10.2E\t%10.2E"%(i+1,x_bin_coords[0][i],x_bin_coords[1][i]))
+            center_coord = (x_bin_coords[0][i] + x_bin_coords[1][i])/2.0
+            if non_dimensional_factor is None:
+                print("  %d \t%10.2E\t%10.2E\t%10.2E"%(i+1,x_bin_coords[0][i],x_bin_coords[1][i],center_coord))
+            else:
+                print("  %d \t%10.2E\t%10.2E\t%10.2E\t    %8.6f"%(i+1,x_bin_coords[0][i],x_bin_coords[1][i],center_coord,center_coord/non_dimensional_factor))
+
 
     def compute_x_bin_center_coords(self):
         import numpy as np
@@ -51,11 +61,21 @@ class ParticleBinDomain:
 
         return y_bin_coords
 
-    def print_y_bin_coords(self):
+    def print_y_bin_coords(self,non_dimensional_factor=None):
         y_bin_coords = self.compute_y_bin_coords()
         print("\n\nY Bin Coordinates are:")
+        table_header = "{:<11} {:<15} {:<15}{:<10}".format('Bin #','Min','Max','Center')
+        if non_dimensional_factor is not None:
+            table_header = "{}\t{:<}".format(table_header,'Non-Dimensional Center')
+        print(table_header)
+
         for i in range(0,self.num_y_bins):
-            print("Bin %d \t%10.2E\t%10.2E"%(i+1,y_bin_coords[0][i],y_bin_coords[1][i]))
+            center_coord = (y_bin_coords[0][i] + y_bin_coords[1][i])/2.0
+            if non_dimensional_factor is None:
+                print("  %d \t%10.2E\t%10.2E\t%10.2E"%(i+1,y_bin_coords[0][i],y_bin_coords[1][i],center_coord))
+            else:
+                print("  %d \t%10.2E\t%10.2E\t%10.2E\t    %8.6f"%(i+1,y_bin_coords[0][i],y_bin_coords[1][i],center_coord,center_coord/non_dimensional_factor))
+
 
 
     def compute_y_bin_center_coords(self):
