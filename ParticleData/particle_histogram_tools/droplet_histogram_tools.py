@@ -118,11 +118,9 @@ class particle_histogram:
 
             #Now store as a numpy numeric array
             DataArray = np.zeros((self.num_bins,NumRadii+1))
-
             for i in range(0,self.num_bins):
                     for j in range(0,NumRadii+1):
                             DataArray[i][j] = float(DataArrayList[i][j])
-
 
 
             #Compute number weighted diameter PDF
@@ -135,72 +133,6 @@ class particle_histogram:
                     if(self.RadiusAverageFlag == 1):
                             for j in range(0,NumRadii):
                                     if(j==0):
-                                            self.pdf[i] = DataArray[i][1]
-                                    else:
-                                            self.pdf[i] = self.pdf[i] + DataArray[i][j+1]
-                                    
-                    else:
-                            self.pdf[i] = DataArray[i][1] #Store first PDF value
-
-
-
-    
-    def read_data_csv(self,FilePath,DebugFlag=0):
-            import csv
-            import itertools
-            import string
-            import numpy as np
-
-            print("Reading Data From: %s"%(FilePath))
-            #Open input file
-            try:
-                    f = open(FilePath,'r')
-                    csv_data = csv.reader(f)
-            except:
-                    print("Failed to Input File!")
-
-            DataArrayList = []
-            count = 0
-            for row in csv_data:
-                    #Only store the numeric values and not the column header names if present in data file
-                    if any( s.isdigit() for s in row):
-                            DataArrayList.append([row])
-                            
-            f.close()
-
-            #Store number of diameter bins
-            self.num_bins = len(DataArrayList)
-            print("Number of particle diameter bins: %d"%(self.num_bins))
-
-            #Perform list comprehension to un-nest the list that was made(not sure why it is nested, but it is)
-            DataArrayList=list(itertools.chain.from_iterable(DataArrayList))
-
-            #For Debugging purposes - print DataArray
-            if(DebugFlag == 1):
-                    for i in range(0,self.num_bins):
-                            print("%s\n"%(str(DataArrayList[i][:])))
-
-            #Now store as a numpy numeric array
-            #DataArrayList has the following data
-            #diameter       R1-pdf  R2-pdf  R3-pdf  ...RNumRadii-pdf
-
-            #Now store as a numpy numeric array
-            DataArray = np.zeros((self.num_bins,len(DataArrayList[0])))
-
-            for i in range(0,self.num_bins):
-                    for j in range(0,len(DataArrayList[0])):
-                            DataArray[i][j] = float(DataArrayList[i][j])
-
-            #Compute number weighted diameter PDF
-            for i in range(0,self.num_bins):  #Initialize to 0 all elements
-                    self.pdf.append(0)
-
-            for i in range(0,self.num_bins):
-                    self.horizontal_bins.append(DataArray[i][0]) #Store diameter bins
-
-                    if(self.RadiusAverageFlag == 1):
-                            for j in range(0,len(DataArrayList[0])-1):
-                                    if(j == 0 ):
                                             self.pdf[i] = DataArray[i][1]
                                     else:
                                             self.pdf[i] = self.pdf[i] + DataArray[i][j+1]
@@ -290,7 +222,6 @@ class particle_histogram:
                     plt.ylabel('PDF')
                     plt.show()
 
-
                     plt.figure()
                     plt.plot(self.horizontal_bins,g_cdf)
                     plt.xlabel(r'$Diameter (\mu meters)$')
@@ -299,20 +230,16 @@ class particle_histogram:
 
             count = 0
             while(count < N): #Loop until number of samples have been generated
-
                     #Generate a random number from the uniform distribution between 0 and 1
                     U_rejection = random.uniform(0, 1)
 
                     #Use inverse CDF method to sample from the PDF of g
                     U = random.uniform(0, 1)
                     for i in range(0,len(g_cdf)-1):
-
                             if(i == 0 and U < g_cdf[i]): #Just assume that sample was from the first bin
                                     d_sample = self.horizontal_bins[i]
-
                             elif(U >= g_cdf[i] and U <= g_cdf[i+1]):
                                     #print("Lower Bound: %10.6E\tUpper Bound: %10.6E"%(g_cdf[i],g_cdf[i+1]))
-
                                     #Linearly interpolate to obtain the value of the sample
                                     x_1 = self.horizontal_bins[i]
                                     x_2 = self.horizontal_bins[i+1]
@@ -356,7 +283,6 @@ class particle_histogram:
         #The diameter histogram must already be defined.
         import math
         
-
         #To have a mass weighted PDF we scale the vertical axis to be the mass of the particles in that bin
         for i in range(0,self.num_bins):
             self.vol_pdf.append(0)
@@ -365,11 +291,9 @@ class particle_histogram:
         self.compute_widths() #Make sure the widths are defined
         for i in range(0,self.num_bins):
             C = C + self.pdf[i]*self.widths[i]*self.horizontal_bins[i]**3
-
         
         for i in range(0,self.num_bins):
             self.vol_pdf[i] = (self.horizontal_bins[i]**3)*self.pdf[i]/(C) #Store mass of particles in bin
-
 
         if(overwrite_pdfs == True):
             for i in range(0,self.num_bins):
@@ -388,6 +312,8 @@ class particle_histogram:
         for i in range(0,self.num_bins):
             self.horizontal_bins[i] = self.horizontal_bins[i]*scaling_factor
 
+	#Update widths based on new bin values
+	self.compute_widths()
 
 
     def plot_histogram(self):
