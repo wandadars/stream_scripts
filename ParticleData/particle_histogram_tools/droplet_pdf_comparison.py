@@ -26,18 +26,18 @@ from droplet_histogram_tools import particle_histogram
 
 #Experimental Data Set
 ExpInputFileName="AcF3_xD10_DropDis.dat"
-ExpFilePathBase = "/home/neal/st_animation/output/particle_PDF_data"
+ExpFilePathBase = "/Users/chris1/Desktop/temp"
 
 #"""
 #Simulation Data set
 SimInputFileName="acetone_PDF_XOverD_10.00_Data.txt"
-SimFilePathBase = "/home/neal/st_animation/output/particle_PDF_data"
+SimFilePathBase = "/Users/chris1/Desktop/temp"
 #"""
 
 OutputFileName = "acetone_PDF_ExpXOverD_10_SimXoverD_10_Data_NumberedWeightedLogFit" #User changes this
 
 #Debug flag
-DebugFlag = 1	#0 for off, 1 for on
+DebugFlag = 0	#0 for off, 1 for on
 
 WeibullPlotFlag = 0  #1 to fit data to Weibull distribution and show on plots, 0 to leave out
 
@@ -140,22 +140,49 @@ if(DebugFlag == 1):
 """
 
 """
-
 #Generate a spoofed data set for scipy to generate the lognormal fitting parameters from
-GeneratedData = experimental_data.sample_from_pdf(1e6,1.5)
-
+GeneratedExpData = experimental_data.sample_from_pdf(1e6,1.5)
 
 #Compute stats on the raw data set to compare with fit
-DataSetMean = np.mean(GeneratedData)
-DataSetMedian = np.median(GeneratedData)
-DataSetStandardDeviation = np.std(GeneratedData)
+DataSetMean = np.mean(GeneratedExpData)
+DataSetMedian = np.median(GeneratedExpData)
+DataSetStandardDeviation = np.std(GeneratedExpData)
 
 print("Mean of Generated data:%10.6E"%(DataSetMean))
 print("Median of Generated data:%10.6E"%(DataSetMedian))
 print("Standard Deviation of Generated data:%10.6E"%(DataSetStandardDeviation))
 
 #Generate a log-normal fit of the data
-shape, loc, scale = stats.lognorm.fit(GeneratedData,floc=0)
+shape, loc, scale = stats.lognorm.fit(GeneratedExpData,floc=0)
+Estimated_normal_mu = np.log(scale)
+Estimated_normal_sigma = shape
+print(scale)
+print(loc)
+
+print("Estimated Normal Distribution mu: %10.6E"%(Estimated_normal_mu))
+print("Estimated Normal Distribution sigma: %10.6E"%(Estimated_normal_sigma))
+
+#For getting the mean and standard deviation of log-normal distribution - https://en.wikipedia.org/wiki/Log-normal_distribution
+Estimated_lognormal_mu = math.exp(Estimated_normal_mu + 0.5*Estimated_normal_sigma**2)
+Estimated_lognormal_sigma = Estimated_lognormal_mu*math.sqrt(math.exp(Estimated_normal_sigma**2)-1) 
+print("Estimated Log-Normal Distribution mu: %10.6E"%( Estimated_lognormal_mu))
+print("Estimated Log-Normal Distribution sigma: %10.6E"%( Estimated_lognormal_sigma ))
+
+
+#Generate a spoofed data set for scipy to generate the lognormal fitting parameters from
+GeneratedSimData = simulation_data.sample_from_pdf(1e6,1.5)
+
+#Compute stats on the raw data set to compare with fit
+DataSetMean = np.mean(GeneratedSimiData)
+DataSetMedian = np.median(GeneratedSimData)
+DataSetStandardDeviation = np.std(GeneratedSimData)
+
+print("Mean of Generated data:%10.6E"%(DataSetMean))
+print("Median of Generated data:%10.6E"%(DataSetMedian))
+print("Standard Deviation of Generated data:%10.6E"%(DataSetStandardDeviation))
+
+#Generate a log-normal fit of the data
+shape, loc, scale = stats.lognorm.fit(GeneratedSimData,floc=0)
 Estimated_normal_mu = np.log(scale)
 Estimated_normal_sigma = shape
 print(scale)
@@ -171,6 +198,8 @@ print("Estimated Log-Normal Distribution mu: %10.6E"%( Estimated_lognormal_mu))
 print("Estimated Log-Normal Distribution sigma: %10.6E"%( Estimated_lognormal_sigma ))
 """
 
+
+
 #Take the value from the dataset and store it into generally named variable to make rest of code generic and resuable
 ExpHorizontalBins = np.asarray(experimental_data.get_horizontal_bins())
 SimHorizontalBins = np.asarray(simulation_data.get_horizontal_bins())
@@ -181,8 +210,8 @@ print SimHorizontalBins
 Exppdf = np.asarray(experimental_data.get_pdf())
 Expwidth = np.asarray(experimental_data.get_widths())
 
-Simpdf = np.asarray(experimental_data.get_pdf())
-Simwidth = np.asarray(experimental_data.get_widths())
+Simpdf = np.asarray(simulation_data.get_pdf())
+Simwidth = np.asarray(simulation_data.get_widths())
 
 
 ExpBinmin = min(ExpHorizontalBins)
@@ -197,22 +226,28 @@ SimSpacing = np.linspace(SimBinmin,SimBinMax,600)
 #ExplogNormalPDF = stats.lognorm.pdf(ExpSpacing,shape,scale=scale)
 #SimlogNormalPDF = stats.lognorm.pdf(SimSpacing,shape,scale=scale)
 
-
 #Plot log-normal fit as well as experimental PDF to compare
 plt.figure(FigCount)
 FigCount = FigCount + 1
 #plt.plot(Spacing*DiameterPlotFactor,logNormalPDF,color='black',label="Log-Normal PDF Fit") #Log-Normal fit to generated data
 
-plt.bar(ExpHorizontalBins*ExpDiameterPlotFactor,Exppdf,Expwidth*ExpDiameterPlotFactor, color='blue',fill=False,label="Emprical Data PDF") 
+
+plt.subplot(1,2,1)
+plt.bar(ExpHorizontalBins*ExpDiameterPlotFactor,Exppdf,Expwidth*ExpDiameterPlotFactor, color='blue',fill=True,label="Emprical Data PDF") 
+plt.ylim([0,max(max(Exppdf),max(Simpdf))])
 #plt.axvline(x=DataSetMean*DiameterPlotFactor)
-
-plt.bar(SimHorizontalBins*SimDiameterPlotFactor,Simpdf,Simwidth*SimDiameterPlotFactor, color='blue',fill=False,label="Simulation Data PDF") 
-#plt.axvline(x=DataSetMean*DiameterPlotFactor)
-
-#plt.plot(HorizontalBins,pdfNormalized, color='blue', marker='o', drawstyle='step',linestyle='-',label="Experimental Data PDF")
-
 plt.legend(loc='best',fontsize=10)
 plt.ylabel("PDF")
+
+plt.subplot(1,2,2)
+plt.bar(SimHorizontalBins*SimDiameterPlotFactor,Simpdf,Simwidth*SimDiameterPlotFactor, color='red',fill=True,label="Simulation Data PDF") 
+plt.ylim([0,max(max(Exppdf),max(Simpdf))])
+#plt.axvline(x=DataSetMean*DiameterPlotFactor)
+plt.legend(loc='best',fontsize=10)
+plt.ylabel("PDF")
+
+
+#plt.plot(HorizontalBins,pdfNormalized, color='blue', marker='o', drawstyle='step',linestyle='-',label="Experimental Data PDF")
 
 #DataFitString = "%s %5.2E \n%s %5.2E\n%s %5.2E \n%s %5.2E"%("Estimated Normal mu = ",Estimated_normal_mu,"Estimated Normal sigma = ",Estimated_normal_sigma,"Estimated Log-normal mu = ",Estimated_lognormal_mu,"Estimated Log-normal sigma = ",Estimated_lognormal_sigma)
 #ax = plt.gca()
@@ -223,9 +258,13 @@ if(MassWeightedFlag == 1):
 else:
 	plt.xlabel("Diameter ($\mu$meters)")
 
+#plt.show(block=True)
 plt.draw()
-plt.show(block=True)
 
+outputFileName = OutputFileName + "." + PlotImageFormat
+print("Outputting Plot of Data Fits to: %s"%(outputFileName))
+plt.savefig(outputFileName, format=PlotImageFormat, dpi=PlotResolution, bbox_inches='tight')
+plt.close()
 
 """
 #Perform a K-S(Kolmogorov-Smirnoff) Test for the fit to see if it is any good
@@ -245,11 +284,47 @@ else:
 
 """
 
-outputFileName = OutputFileName + "." + PlotImageFormat
-print("Outputting Plot of Data Fits to: %s"%(outputFileName))
+#Plot log-normal fit as well as experimental PDF to compare
+plt.figure(FigCount)
+FigCount = FigCount + 1
 
+experimental_data.compute_cdf()
+simulation_data.compute_cdf()
+
+Expcdf = np.asarray(experimental_data.get_cdf())
+Expwidth = np.asarray(experimental_data.get_widths())
+
+Simcdf = np.asarray(simulation_data.get_cdf())
+Simwidth = np.asarray(simulation_data.get_widths())
+
+
+plt.step(ExpHorizontalBins*ExpDiameterPlotFactor,Expcdf, color='blue',label="Emprical Data CDF") 
+#plt.axvline(x=DataSetMean*DiameterPlotFactor)
+
+plt.step(SimHorizontalBins*SimDiameterPlotFactor,Simcdf, color='red',label="Simulation Data CDF") 
+#plt.axvline(x=DataSetMean*DiameterPlotFactor)
+
+plt.ylim([0,1])
+#plt.plot(HorizontalBins,pdfNormalized, color='blue', marker='o', drawstyle='step',linestyle='-',label="Experimental Data PDF")
+plt.legend(loc='best',fontsize=10)
+plt.ylabel("PDF")
+
+#DataFitString = "%s %5.2E \n%s %5.2E\n%s %5.2E \n%s %5.2E"%("Estimated Normal mu = ",Estimated_normal_mu,"Estimated Normal sigma = ",Estimated_normal_sigma,"Estimated Log-normal mu = ",Estimated_lognormal_mu,"Estimated Log-normal sigma = ",Estimated_lognormal_sigma)
+#ax = plt.gca()
+#plt.text(0.5,0.5,DataFitString,fontsize=10,transform=ax.transAxes) #uses normalized axes coordinates [0,1]
+
+if(MassWeightedFlag == 1):
+	plt.xlabel("Diameter ($\mu$meters)")	
+else:
+	plt.xlabel("Diameter ($\mu$meters)")
+
+#plt.show(block=True)
+plt.draw()
+
+
+outputFileName = OutputFileName +"_CDF_compare"+ "." + PlotImageFormat
+print("Outputting Plot of Data Fits to: %s"%(outputFileName))
 plt.savefig(outputFileName, format=PlotImageFormat, dpi=PlotResolution, bbox_inches='tight')
-plt.close()
 
 
 

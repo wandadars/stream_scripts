@@ -29,6 +29,9 @@ class particle_histogram:
     def get_pdf(self):
         return self.pdf
 
+    def get_cdf(self):
+	return self.cdf
+
     def get_widths(self):
         if not self.widths:
             self.compute_widths()
@@ -242,6 +245,22 @@ class particle_histogram:
             C = C + self.pdf[i]*self.widths[i]
 
         return C
+
+    def compute_cdf(self):
+        Area = self.compute_histogram_area()
+	normalized_pdf = []
+        for i in range(0,self.num_bins):
+	    normalized_pdf.append(0)
+            normalized_pdf[i] = self.pdf[i]/Area
+
+	self.compute_widths()
+	self.cdf = []
+	for i in range(0,self.num_bins):
+	   if i == 0 :
+	       self.cdf.append(normalized_pdf[i]*self.widths[i])
+	   else:    
+	       self.cdf.append( self.cdf[i-1] + normalized_pdf[i]*self.widths[i] )
+
 
 
     def sample_from_pdf(self, NumSamples, RejectionM, show_samples=False, DebugFlag=0):

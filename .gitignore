@@ -2,3 +2,5 @@
 *.swp
 *.DS_Store
 
+#Python runtime library files
+*.pyc
