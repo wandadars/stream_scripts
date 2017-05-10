@@ -53,7 +53,7 @@ Dl = 0.0105 #Diameter of liquid injection
 #Start & Stop value of particle data file indices
 iStart = 10000
 iStep = 100
-iEnd = 21000
+iEnd = 20000
 
 
 #Particle statistics user definition section

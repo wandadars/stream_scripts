@@ -25,14 +25,17 @@ from droplet_histogram_tools import particle_histogram
 #Specify the path to the Data file that contains the formatted slice data
 
 #Experimental Data Set
+#ExpInputFileName="acetone_PDF_XOverD_10.00_Data_weibull.txt"
+#ExpFilePathBase = "/home2/neal/temp/2d_pieslice/output/particle_PDF_data/testing"
 ExpInputFileName="acetone_PDF_XOverD_10.00_Data_weibull.txt"
-ExpFilePathBase = "/home2/neal/temp/2d_pieslice/output/particle_PDF_data/testing"
+ExpFilePathBase = "/home2/neal/temp/2d_pieslice/distribution_comparison"
 
-#"""
+
 #Simulation Data set
-SimInputFileName="acetone_PDF_XOverD_10.00_Data.txt"
-SimFilePathBase = "/home2/neal/temp/2d_pieslice/output/particle_PDF_data/testing"
-#"""
+#SimInputFileName="acetone_PDF_XOverD_10.00_Data.txt"
+#SimFilePathBase = "/home2/neal/temp/2d_pieslice/output/particle_PDF_data/testing"
+SimInputFileName="acetone_PDF_XOverD_10.00_Data_lognormal.txt"
+SimFilePathBase = "/home2/neal/temp/2d_pieslice/distribution_comparison"
 
 OutputFileName = "acetone_PDF_ExpXOverD_10_SimXoverD_10_Data_NumberedWeightedLogFit" #User changes this
 
