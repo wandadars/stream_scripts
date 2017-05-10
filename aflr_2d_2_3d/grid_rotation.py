@@ -28,12 +28,20 @@ run_directory = os.getcwd()
 print "Running in Directory: ",run_directory
 
 
+#Note: When rotating using the aflr tool to make an axisymmetric pie slice, the boundaries are numbered
+#such that the original surface has the higher boundary marker number, and the newer surface that is
+#created from the rotation has the lower number.
 
-grid_base_name="injector_3d" #Name of the grid i.e. <name>.vog
-boundary_1 = "BC_28" #Name of boundary face that is not rotated on the pie slice
-boundary_2 = "BC_27" #Name of boundary face that IS rotated on the pie slice
-theta_0 = 4 #Angle of initial provided pie-slice sector that was generated from AFLR2d
+grid_base_name="grid_3d" #Name of the grid i.e. <name>.vog
+boundary_1 = "BC_14" #Name of boundary face that is not rotated on the pie slice
+boundary_2 = "BC_13" #Name of boundary face that IS rotated on the pie slice
+theta_0 = 1.8 #Angle of initial provided pie-slice sector that was generated from AFLR2d
 epsilon = 1e-6 #Define the smallest number that you want to call zero
+#grid_base_name="grid_pie_slice" #Name of the grid i.e. <name>.vog
+#boundary_1 = "BC_14" #Name of boundary face that is not rotated on the pie slice
+#boundary_2 = "BC_13" #Name of boundary face that IS rotated on the pie slice
+#theta_0 = 1 #Angle of initial provided pie-slice sector that was generated from AFLR2d
+#epsilon = 1e-6 #Define the smallest number that you want to call zero
 
 
 

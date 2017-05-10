@@ -26,12 +26,9 @@ from droplet_histogram_tools import particle_histogram
 
 #"""
 #Experimental Data Set
-InputFileName="acetone_PDF_XOverD_10.00_Data.txt"
-FilePathBase = "/home2/neal/temp/2d_pieslice/output/particle_PDF_data_old"
-OutputFileName = "AcF3_xD0.3_DropDis_MassWeightedLog_WeibullFit" #User changes this
-#InputFileName="AcF3_xD0.3_DropDis.dat"
-#FilePathBase = "/Users/chris1/Dropbox/Streamine_Numerics/Stream_VV_Cases/Fall_2015_Cases/Droplet_Vaporization/SprayJetData_Masri/Acetone_Flames/Acetone reacting/Experiment A/Acetone_Flames/AcF3/xD_0.3/Droplet_Distribution"
-#OutputFileName = "AcF3_xD0.3_DropDis_MassWeightedLog_WeibullFit" #User changes this
+InputFileName="AcF3_xD10_DropDis.dat"
+FilePathBase = "/Users/chris1/Dropbox/Streamine_Numerics/Stream_VV_Cases/Fall_2015_Cases/Droplet_Vaporization/SprayJetData_Masri/Acetone_Flames/Acetone reacting/Experiment A/Acetone_Flames/AcF3/xD_10/Droplet_Distribution"
+OutputFileName = "AcF3_xD10_DropDis_MassWeightedLog_WeibullFit" #User changes this
 #OutputFileName = "SP2_xD0.3_DropDis_NumberedWeightedLogFit" #User changes this
 #"""
 
@@ -46,27 +43,13 @@ OutputFileName = "acetone_PDF_XOverD_10_Data_NumberedWeightedLogFit" #User chang
 """
 
 
-"""
-#Simulation Data set - Paraview CSV File
-InputFileName="histogram_data.csv"
-FilePathBase = "/Users/chris1/Dropbox/Streamine_Numerics/Stream_VV_Cases/Fall_2015_Cases/Droplet_Vaporization/data_analysis_scripts/Test_data"
-OutputFileName = "acetone_PDF_noBreakup_Paraview_Data_NumberWeightedLogFit" #User changes this
-"""
-
 #Debug flag
 DebugFlag = 0	#0 for off, 1 for on
-
 WeibullPlotFlag = 1  #1 to fit data to Weibull distribution and show on plots, 0 to leave out
-
 #Flag for averaging the PDF over all radii
 RadiusAverageFlag = 1	# 0 - only take first value, 1 - average over all radial PDFs in data file
-
 #Provide the density of the liquid for converting number weighted droplet diameter PDFs to mass weighted droplet mass PDF.
-MassWeightedFlag = 0	# 0 for using the original diameter data, 1 for converting to mass weighted PDF
-#LiquidDensity = 791  #kg/m^3
-LiquidDensity = 791e12	#kg/micrometersm^3
-
-
+MassWeightedFlag = 1	# 0 for using the original diameter data, 1 for converting to mass weighted PDF
 
 #Output options
 PlotImageFormat = 'png'
@@ -76,13 +59,12 @@ PlotResolution = 500  #Desired dpi of plot
 #Factor required to convert diameter data in experimental data file to fundamental unit e.g. if file 
 #has diameters listed in terms of micrometers, then the factor needs to be 1e-6 to convert back to meters.
 #This is necessary for the section that computes the mass of the particles
-#DiameterConversionFactor = 1.0e-6  #For experimental dataset
-DiameterConversionFactor = 1.0  #For simulation dataset 
+DiameterConversionFactor = 1.0e-6  #For experimental dataset
+#DiameterConversionFactor = 1.0  #For simulation dataset 
 
 DiameterPlotFactor = 1.0e6 #Factor for scaling the horizontal axis of diameter - for experimental data
 #DiameterPlotFactor = 1.0e6 #Factor for scaling the horizontal axis of diameter - for simulation data
 #DiameterPlotFactor = 1.0 #Factor for scaling the horizontal axis of diameter - for simulation data with mass weighting debugging - possibly incorrect to use
-
 
 
 #No need to change after this line for user
@@ -92,9 +74,7 @@ FigCount = 1
 FilePath=FilePathBase + "/"+InputFileName
 
 experimental_data = particle_histogram()
-#experimental_data.read_data_csv(FilePath)
 experimental_data.read_data(FilePath)
-
 
 #Rescaledata by DiameterConversionFactor 
 experimental_data.rescale_bin_values(DiameterConversionFactor)
@@ -112,7 +92,6 @@ if(MassWeightedFlag == 1):
 
 #Normalize the histogram to bring it into line with approximating a PDF
 experimental_data.normalize_pdf()
-
 
 #Plot pdf to see how it looks
 experimental_data.plot_histogram()
@@ -150,13 +129,10 @@ if(DebugFlag == 1):
 #Generate a spoofed data set for scipy to generate the lognormal fitting parameters from
 GeneratedData = experimental_data.sample_from_pdf(1e6,1.5)
 
-
-
 #Compute stats on the raw data set to compare with fit
 DataSetMean = np.mean(GeneratedData)
 DataSetMedian = np.median(GeneratedData)
 DataSetStandardDeviation = np.std(GeneratedData)
-
 
 print("Mean of Generated data:%10.6E"%(DataSetMean))
 print("Median of Generated data:%10.6E"%(DataSetMedian))
@@ -241,14 +217,21 @@ else:
 	plt.xlabel("Diameter ($\mu$meters)")
 
 plt.draw()
-plt.ylim([0,60000])
-#plt.show(block=True)
+if(WeibullPlotFlag == 1):
+    plt.ylim([0,max(max(pdf),max(logNormalPDF),max(WeibullPDF))])
+else:
+    plt.ylim([0,max(max(pdf),max(logNormalPDF))])
 
+#plt.show(block=True)
 
 
 #Perform a K-S(Kolmogorov-Smirnoff) Test for the fit to see if it is any good
 KS, pValue = stats.ks_2samp(pdf,logNormalPDF)
-print("Value of Kolmogorov Statistic is: %f"%(KS))
+print("Value of Kolmogorov Statistic for Log-Normal PDF is: %f"%(KS))
+
+if WeibullPlotFlag == 1:
+    KS, pValue = stats.ks_2samp(pdf,WeibullPDF)
+    print("Value of Kolmogorov Statistic for Weibull PDF is: %f"%(KS))
 
 
 #Output data to a file for safe keeping
