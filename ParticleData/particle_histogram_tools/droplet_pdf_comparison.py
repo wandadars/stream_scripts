@@ -22,7 +22,6 @@ import time
 import os
 from droplet_histogram_tools import particle_histogram
 
-#Specify the path to the Data file that contains the formatted slice data
 
 #Experimental Data Set
 #ExpInputFileName="acetone_PDF_XOverD_10.00_Data_weibull.txt"
@@ -59,7 +58,7 @@ PlotResolution = 500  #Desired dpi of plot
 #Factor required to convert diameter data in experimental data file to fundamental unit e.g. if file 
 #has diameters listed in terms of micrometers, then the factor needs to be 1e-6 to convert back to meters.
 #This is necessary for the section that computes the mass of the particles
-ExpDiameterConversionFactor = 1.0e-6  #For experimental dataset
+ExpDiameterConversionFactor = 1.0  #For experimental dataset
 SimDiameterConversionFactor = 1.0  #For simulation dataset 
 
 ExpDiameterPlotFactor = 1.0e6 #Factor for scaling the horizontal axis of diameter - for experimental data
