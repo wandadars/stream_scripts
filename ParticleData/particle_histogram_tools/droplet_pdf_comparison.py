@@ -96,6 +96,7 @@ if(DebugFlag == 1):
 
 if(MassWeightedFlag == 1):
     experimental_data.compute_volume_weighted_pdf(overwrite_pdfs=True)
+    simulation_data.compute_volume_weighted_pdf(overwrite_pdfs=True)
 
 #Normalize the histogram to bring it into line with approximating a PDF
 experimental_data.normalize_pdf()
@@ -198,29 +199,28 @@ SimSpacing = np.linspace(SimBinmin,SimBinMax,600)
 plt.figure(FigCount)
 FigCount = FigCount + 1
 
-
 plt.subplot(2,2,1)
 plt.bar(ExpHorizontalBins*ExpDiameterPlotFactor,Exppdf,Expwidth*ExpDiameterPlotFactor, color='blue',fill=True,label="Emprical Data PDF") 
 plt.ylim([0,max(max(Exppdf),max(Simpdf))])
-plt.legend(loc='best',fontsize=10)
+plt.xlim([0,max(max(ExpHorizontalBins*ExpDiameterPlotFactor),max(SimHorizontalBins*SimDiameterPlotFactor))])
+plt.legend(loc='best',fontsize=7)
 plt.ylabel("PDF")
 
 plt.subplot(2,2,2)
 plt.bar(SimHorizontalBins*SimDiameterPlotFactor,Simpdf,Simwidth*SimDiameterPlotFactor, color='red',fill=True,label="Simulation Data PDF") 
 plt.ylim([0,max(max(Exppdf),max(Simpdf))])
-plt.legend(loc='best',fontsize=10)
+plt.xlim([0,max(max(ExpHorizontalBins*ExpDiameterPlotFactor),max(SimHorizontalBins*SimDiameterPlotFactor))])
+plt.legend(loc='best',fontsize=7)
 plt.ylabel("PDF")
 
 plt.subplot(2,2,3)
 plt.bar(SimHorizontalBins*SimDiameterPlotFactor,Simpdf,Simwidth*SimDiameterPlotFactor, color='red',fill=True,label="Simulation Data PDF") 
 plt.ylim([0,max(max(Exppdf),max(Simpdf))])
-plt.legend(loc='best',fontsize=10)
+plt.xlim([0,max(max(ExpHorizontalBins*ExpDiameterPlotFactor),max(SimHorizontalBins*SimDiameterPlotFactor))])
+plt.legend(loc='best',fontsize=7)
 plt.ylabel("PDF")
 
-if(MassWeightedFlag == 1):
-	plt.xlabel("Diameter ($\mu$meters)")	
-else:
-	plt.xlabel("Diameter ($\mu$meters)")
+plt.xlabel("Diameter ($\mu$meters)")	
 
 plt.draw()
 
@@ -235,6 +235,28 @@ KS, pValue = stats.ks_2samp(ExplogNormalPDF,SimlogNormalPDF)
 print("Value of Kolmogorov Statistic is: %f"%(exp_KS))
 """
 
+
+#Compare the PDFs of the two distributions to each other
+plt.figure(FigCount)
+FigCount = FigCount + 1
+
+plt.bar(ExpHorizontalBins*ExpDiameterPlotFactor,Exppdf,Expwidth*ExpDiameterPlotFactor, color='black',fill=False,label="Emprical Data PDF")
+plt.step(SimHorizontalBins*SimDiameterPlotFactor,Simpdf, color='red',label="Simulation Data PDF") 
+plt.ylim([0,max(max(Exppdf),max(Simpdf))])
+plt.xlim([0,max(max(ExpHorizontalBins*ExpDiameterPlotFactor),max(SimHorizontalBins*SimDiameterPlotFactor))])
+plt.legend(loc='best',fontsize=7)
+plt.ylabel("PDF")
+plt.xlabel("Diameter ($\mu$meters)")
+plt.draw()
+
+outputFileName = OutputFileName + "_pdf_overlay"+"." + PlotImageFormat
+print("Outputting Plot of Data Fits to: %s"%(outputFileName))
+plt.savefig(outputFileName, format=PlotImageFormat, dpi=PlotResolution, bbox_inches='tight')
+plt.close()
+
+
+
+
 #Plot log-normal fit as well as experimental PDF to compare
 plt.figure(FigCount)
 FigCount = FigCount + 1
@@ -248,7 +270,6 @@ Expwidth = np.asarray(experimental_data.get_widths())
 Simcdf = np.asarray(simulation_data.get_cdf())
 Simwidth = np.asarray(simulation_data.get_widths())
 
-
 plt.step(ExpHorizontalBins*ExpDiameterPlotFactor,Expcdf, color='blue',label="Emprical Data CDF") 
 plt.step(SimHorizontalBins*SimDiameterPlotFactor,Simcdf, color='red',label="Simulation Data CDF") 
 
@@ -256,17 +277,21 @@ plt.ylim([0,1])
 plt.legend(loc='best',fontsize=10)
 plt.ylabel("CDF")
 
-if(MassWeightedFlag == 1):
-	plt.xlabel("Diameter ($\mu$meters)")	
-else:
-	plt.xlabel("Diameter ($\mu$meters)")
-
+plt.xlabel("Diameter ($\mu$meters)")	
 plt.draw()
 
 
 outputFileName = OutputFileName +"_CDF_compare"+ "." + PlotImageFormat
 print("Outputting Plot of Data Fits to: %s"%(outputFileName))
 plt.savefig(outputFileName, format=PlotImageFormat, dpi=PlotResolution, bbox_inches='tight')
+
+
+
+
+
+
+
+
 
 
 #Go back to the slice data directory
