@@ -21,14 +21,16 @@ from scipy import stats,special
 import time
 import os
 from droplet_histogram_tools import particle_histogram
+from scipy.optimize import curve_fit
+
 
 #Specify the path to the Data file that contains the formatted slice data
 
 #"""
 #Experimental Data Set
-InputFileName="AcF3_xD10_DropDis.dat"
-FilePathBase = "/Users/chris1/Dropbox/Streamine_Numerics/Stream_VV_Cases/Fall_2015_Cases/Droplet_Vaporization/SprayJetData_Masri/Acetone_Flames/Acetone reacting/Experiment A/Acetone_Flames/AcF3/xD_10/Droplet_Distribution"
-OutputFileName = "AcF3_xD10_DropDis_MassWeightedLog_WeibullFit" #User changes this
+InputFileName="AcF3_xD0.3_DropDis.dat"
+FilePathBase = "/Users/chris1/Dropbox/Streamine_Numerics/Stream_VV_Cases/Fall_2015_Cases/Droplet_Vaporization/SprayJetData_Masri/Acetone_Flames/Acetone reacting/Experiment A/Acetone_Flames/AcF3/xD_0.3/Droplet_Distribution"
+OutputFileName = "AcF3_xD0.3_DropDis_MassWeightedLog_WeibullFit_test" #User changes this
 #OutputFileName = "SP2_xD0.3_DropDis_NumberedWeightedLogFit" #User changes this
 #"""
 
@@ -138,7 +140,6 @@ print("Mean of Generated data:%10.6E"%(DataSetMean))
 print("Median of Generated data:%10.6E"%(DataSetMedian))
 print("Standard Deviation of Generated data:%10.6E"%(DataSetStandardDeviation))
 
-
 #Generate a log-normal fit of the data
 shape, loc, scale = stats.lognorm.fit(GeneratedData,floc=0)
 Estimated_normal_mu = np.log(scale)
@@ -170,20 +171,21 @@ Spacing = np.linspace(Binmin,BinMax,600)
 logNormalPDF = stats.lognorm.pdf(Spacing,shape,scale=scale)
 
 if(WeibullPlotFlag == 1):
-	#Generate a weibull distribution of the data
+	    #Generate a weibull distribution of the data
         p0, p1, p2 = stats.weibull_min.fit(GeneratedData,floc=0)
-	#p0 = k = Shape, p1=loc=location, p2=lambda=scale
+	    #p0 = k = Shape, p1=loc=location, p2=lambda=scale
         print(p0)
         print(p1)
         print(p2)
         print("Estimated Weibull shape factor: %f"%(p0))
         print("Estimated Weibull scale factor: %f"%(p2))
 
-	estimated_weibull_mu = p2*special.gamma(1 + 1.0/p0)
-	estimated_weibull_sigma = math.sqrt( p2**(2)*(special.gamma(1 + 2.0/p0) - special.gamma(1 + 1.0/p0)**2))
+	    estimated_weibull_mu = p2*special.gamma(1 + 1.0/p0)
+	    estimated_weibull_sigma = math.sqrt( p2**(2)*(special.gamma(1 + 2.0/p0) - special.gamma(1 + 1.0/p0)**2))
         print("Estimated Weibull Distribution mu: %f"%(estimated_weibull_mu))
         print("Estimated Weibull Distribution sigma: %f"%(estimated_weibull_sigma))
-	WeibullPDF   = stats.weibull_min.pdf(Spacing,p0,p1,p2)
+	    WeibullPDF   = stats.weibull_min.pdf(Spacing,p0,p1,p2)
+
 
 
 #Plot log-normal fit as well as experimental PDF to compare
@@ -191,25 +193,24 @@ plt.figure(FigCount)
 FigCount = FigCount + 1
 plt.plot(Spacing*DiameterPlotFactor,logNormalPDF,color='black',label="Log-Normal PDF Fit") #Log-Normal fit to generated data
 
-plt.bar(HorizontalBins*DiameterPlotFactor,pdf,width*DiameterPlotFactor, color='blue',fill=False,label="Emprical Data PDF") 
-plt.axvline(x=DataSetMean*DiameterPlotFactor)
-
-#plt.plot(HorizontalBins,pdfNormalized, color='blue', marker='o', drawstyle='step',linestyle='-',label="Experimental Data PDF")
 if(WeibullPlotFlag == 1):
     plt.plot(Spacing*DiameterPlotFactor,WeibullPDF,color='green',label="Weibull PDF Fit")
 
-plt.legend(loc='best',fontsize=10)
+plt.bar(HorizontalBins*DiameterPlotFactor,pdf,width*DiameterPlotFactor, color='blue',fill=False,label="Emprical Data PDF") 
+plt.axvline(x=DataSetMean*DiameterPlotFactor,label='Empirical Data Mean')
+
+plt.legend(loc='best',fontsize=8)
 plt.ylabel("PDF")
 
 DataFitStringFormat = "%s %5.2E \n%s %5.2E\n%s %5.2E \n%s %5.2E"
-DataFitString = DataFitStringFormat%("Estimated Normal mu = ",Estimated_normal_mu,"Estimated Normal sigma = ",Estimated_normal_sigma,"Estimated Log-normal mu = ",Estimated_lognormal_mu,"Estimated Log-normal sigma = ",Estimated_lognormal_sigma)
+DataFitString = DataFitStringFormat%("Normal mu = ",Estimated_normal_mu,"Normal sigma = ",Estimated_normal_sigma,"Log-normal mu = ",Estimated_lognormal_mu,"Log-normal sigma = ",Estimated_lognormal_sigma)
 
 if(WeibullPlotFlag == 1):
     DataFitStringFormat = "%s %5.2E \n%s %5.2E\n%s %5.2E \n%s %5.2E \n%s %5.2E \n%s %5.2E"
-    DataFitString = DataFitStringFormat%("Estimated Normal mu = ",Estimated_normal_mu,"Estimated Normal sigma = ",Estimated_normal_sigma,"Estimated Log-normal mu = ",Estimated_lognormal_mu,"Estimated Log-normal sigma = ",Estimated_lognormal_sigma,"Estimated Weibull mu = ",estimated_weibull_mu,"Estimated Weibull sigma = ",estimated_weibull_sigma)
+    DataFitString = DataFitStringFormat%("Normal mu = ",Estimated_normal_mu,"Normal sigma = ",Estimated_normal_sigma,"Log-normal mu = ",Estimated_lognormal_mu,"Log-normal sigma = ",Estimated_lognormal_sigma,"Weibull mu = ",estimated_weibull_mu,"Weibull sigma = ",estimated_weibull_sigma)
 
 ax = plt.gca()
-plt.text(0.5,0.6,DataFitString,fontsize=10,transform=ax.transAxes) #uses normalized axes coordinates [0,1]
+plt.text(0.7,0.6,DataFitString,fontsize=8,transform=ax.transAxes) #uses normalized axes coordinates [0,1]
 
 if(MassWeightedFlag == 1):
 	plt.xlabel("Diameter ($\mu$meters)")	
