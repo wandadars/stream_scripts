@@ -19,11 +19,14 @@ class ParticleBinDomain:
         import numpy as np
         x_bin_coords = np.zeros((2,self.num_x_bins))
         x_bin_coords[0][0] = self.x_min
-        x_bin_coords[1][0] = self.x_min + self.compute_dx()
+        x_bin_coords[1][0] = self.x_min + (1.0/2.0)*self.compute_dx()
         for i in range(1,self.num_x_bins):
-            x_bin_coords[0][i] = x_bin_coords[1][i-1]
-            x_bin_coords[1][i] = x_bin_coords[0][i] + self.compute_dx()
-        
+	    if i == self.num_x_bins-1:
+                x_bin_coords[0][i] = x_bin_coords[1][i-1]
+                x_bin_coords[1][i] = x_bin_coords[0][i] + (1.0/2.0)*self.compute_dx()
+	    else:
+                x_bin_coords[0][i] = x_bin_coords[1][i-1]
+                x_bin_coords[1][i] = x_bin_coords[0][i] + self.compute_dx()
         return x_bin_coords
 
     def print_x_bin_coords(self,non_dimensional_factor=None):
@@ -41,7 +44,6 @@ class ParticleBinDomain:
             else:
                 print("  %d \t%10.2E\t%10.2E\t%10.2E\t    %8.6f"%(i+1,x_bin_coords[0][i],x_bin_coords[1][i],center_coord,center_coord/non_dimensional_factor))
 
-
     def compute_x_bin_center_coords(self):
         import numpy as np
 	center_x_coords = np.zeros(self.num_x_bins)
@@ -54,11 +56,14 @@ class ParticleBinDomain:
         import numpy as np
         y_bin_coords = np.zeros((2,self.num_y_bins))
         y_bin_coords[0][0] = self.y_min
-        y_bin_coords[1][0] = self.y_min + self.compute_dy()
+        y_bin_coords[1][0] = self.y_min + (1.0/2.0)*self.compute_dy()
         for i in range(1,self.num_y_bins):
-            y_bin_coords[0][i] = y_bin_coords[1][i-1]
-            y_bin_coords[1][i] = y_bin_coords[0][i] + self.compute_dy()
-
+	    if i == self.num_y_bins-1:
+                y_bin_coords[0][i] = y_bin_coords[1][i-1]
+                y_bin_coords[1][i] = y_bin_coords[0][i] + (1.0/2.0)*self.compute_dy()
+	    else:
+                y_bin_coords[0][i] = y_bin_coords[1][i-1]
+                y_bin_coords[1][i] = y_bin_coords[0][i] + self.compute_dy()
         return y_bin_coords
 
     def print_y_bin_coords(self,non_dimensional_factor=None):

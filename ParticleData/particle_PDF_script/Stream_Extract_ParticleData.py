@@ -34,34 +34,36 @@ from ParticleBinClass import ParticleBinCell,ParticleBinDomain
 from utilities import *
 
 #For calling the h5dump shell script
-ShellScriptPath="/home/neal/codes/locistream/stream_scripts/ParticleData/particle_PDF_script"
+ShellScriptPath="/u/crneal/stream_scripts/ParticleData/particle_PDF_script"
 
 #Diameter Bin Parameters
 BinFlag = 1 #1 for using diameter bins and 0 for no bins when computing PDF
 
 Diameter_Min = 0.0
-Diameter_Max = 150.0e-6
-nDBins = 150
-
+Diameter_Max = 120.0e-6
+nDBins = 120
 
 #Radial Bins Information: There is an implicit assumption that the axis of the jet corresponds to y=0, therefore allowing for the following formula to be used: r = sqrt(y^2 + z^2)
-RadialBinFlag = 0 # 0 for cartesian y bins, 1 for cylindrical R bins. If 1, treat y variable as r in code
+RadialBinFlag = 1 # 0 for cartesian y bins, 1 for cylindrical R bins. If 1, treat y variable as r in code
 
 #Non-Dimensionalization Parameters
 Dl = 0.0105 #Diameter of liquid injection
 
 #Start & Stop value of particle data file indices
-iStart = 10000
-iStep = 100
-iEnd = 20000
+iStart = 5000
+iStep = 250
+iEnd = 11250
+#iStart = 16000
+#iStep = 250
+#iEnd = 20000
 
 
 #Particle statistics user definition section
-nXBins = 3
+nXBins = 7
 XMin = 0.0
-XMax = 210e-3 
+XMax = 0.3675
 
-nYBins = 6
+nYBins = 10
 YMin = 0.0
 YMax = 10.5e-3  
 #nYBins = 4
