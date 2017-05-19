@@ -43,7 +43,6 @@ Diameter_Min = 0.0
 Diameter_Max = 120.0e-6
 nDBins = 120
 
-
 #Radial Bins Information: There is an implicit assumption that the axis of the jet corresponds to y=0, therefore allowing for the following formula to be used: r = sqrt(y^2 + z^2)
 RadialBinFlag = 1 # 0 for cartesian y bins, 1 for cylindrical R bins. If 1, treat y variable as r in code
 
