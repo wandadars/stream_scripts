@@ -1,76 +1,73 @@
 #! /usr/bin/env python
-#######################################################################################
-# The purpose of this script is to read in a data file containing probability density
-# function data for particle diameter distributions away from a spray jet and plot
-# the data.
-#
-#: Author Christopher Neal
-#
-# Date: 02-15-2016
-# Updated: 05-19-2016
-#
-#######################################################################################
-
 
 #### import modules
 import math
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
-from scipy import stats 
-import time
 import os
+from scipy import stats 
+import sys
+import time
 from droplet_histogram_tools import particle_histogram
+from utilities import *
+
+
+if len(sys.argv) <2:
+    print 'Error: Must give input file to script'
+    sys.exit(1)
+
+input_reader = user_input_parser()
+
+file_name = sys.argv[1]
+file_path = os.getcwd()
+user_settings = input_reader.parse_user_input_file(file_name,file_path)
 
 
 #Experimental Data Set
-#ExpInputFileName="AcF3_xD10_DropDis.dat"
-ExpInputFileName="AcF3_xD0.3_DropDis.dat"
-#ExpInputFileName="acetone_PDF_XOverD_10.00_Data_weibull.txt"
-ExpFilePathBase = "/home2/neal/temp/2d_pieslice/weibull/output/particle_PDF_data/"
-#ExpInputFileName="acetone_PDF_XOverD_10.00_Data_weibull.txt"
-#ExpFilePathBase = "/home2/neal/temp/2d_pieslice/distribution_comparison"
+ExpInputFileName = user_settings['ExpInputFileName']
+ExpFilePathBase = user_settings['ExpFilePathBase']
+
+ExpDataTag = 'Data Set 1'
+if 'ExpDataTag' in user_settings: ExpDataTag = user_settings['ExpDataTag'] 
+
+#Simulation Data Set
+SimInputFileName = user_settings['SimInputFileName'] 
+SimFilePathBase = user_settings['SimFilePathBase']
+
+SimDataTag = 'Data Set 2'
+if 'SimDataTag' in user_settings: SimDataTag = user_settings['SimDataTag'] 
 
 
-#Simulation Data set
-#SimInputFileName="acetone_PDF_XOverD_10.00_Data.txt"
-SimFilePathBase = "/home2/neal/temp/2d_pieslice/weibull/output/particle_PDF_data/"
-#SimInputFileName="acetone_PDF_XOverD_10.00_Data_lognormal.txt"
-#SimInputFileName= "acetone_PDF_XOverD_10.00_Data_weibull.txt"
-SimInputFileName= "acetone_PDF_XOverD_-7.54_Data.txt"
-#SimFilePathBase = "/home2/neal/temp/2d_pieslice/distribution_comparison"
-
-OutputFileName = "acetone_PDF_ExpXOverD_0.3_SimXoverD_-7.54_Data_MassWeightedLogFit" #User changes this
+OutputFileName = user_settings['OutputFileName'] 
 
 #Debug flag
-DebugFlag = 0	#0 for off, 1 for on
+DebugFlag = int(user_settings['DebugFlag'])
 
-WeibullPlotFlag = 0  #1 to fit data to Weibull distribution and show on plots, 0 to leave out
+WeibullPlotFlag = int(user_settings['WeibullPlotFlag'])  #1 to fit data to Weibull distribution and show on plots, 0 to leave out
 
 #Flag for averaging the PDF over all radii
-RadiusAverageFlag = 1	# 0 - only take first value, 1 - average over all radial PDFs in data file
+RadiusAverageFlag = int(user_settings['RadiusAverageFlag'])	# 0 - only take first value, 1 - average over all radial PDFs in data file
 
 #Provide the density of the liquid for converting number weighted droplet diameter PDFs to mass weighted droplet mass PDF.
-MassWeightedFlag = 1	# 0 for using the original diameter data, 1 for converting to mass weighted PDF
+MassWeightedFlag = int(user_settings['MassWeightedFlag'])	# 0 for using the original diameter data, 1 for converting to mass weighted PDF
 
 
 #Output options
-PlotImageFormat = 'png'
-PlotResolution = 500  #Desired dpi of plot
+PlotImageFormat = user_settings['PlotImageFormat'] 
+PlotResolution = float(user_settings['PlotResolution'])  #Desired dpi of plot
 
 
 #Factor required to convert diameter data in experimental data file to fundamental unit e.g. if file 
 #has diameters listed in terms of micrometers, then the factor needs to be 1e-6 to convert back to meters.
 #This is necessary for the section that computes the mass of the particles
-ExpDiameterConversionFactor = 1.0e-6  #For experimental dataset
-SimDiameterConversionFactor = 1.0  #For simulation dataset 
+ExpDiameterConversionFactor = float(user_settings['ExpDiameterConversionFactor'])   #For experimental dataset
+SimDiameterConversionFactor = float(user_settings['SimDiameterConversionFactor'])  #For simulation dataset 
 
-ExpDiameterPlotFactor = 1.0e6 #Factor for scaling the horizontal axis of diameter - for experimental data
-SimDiameterPlotFactor = 1.0e6 #Factor for scaling the horizontal axis of diameter - for simulation data
+ExpDiameterPlotFactor = float(user_settings['ExpDiameterPlotFactor']) #Factor for scaling the horizontal axis of diameter - for experimental data
+SimDiameterPlotFactor = float(user_settings['SimDiameterPlotFactor']) #Factor for scaling the horizontal axis of diameter - for simulation data
 
 
-
-#No need to change after this line for user
 
 FigCount = 1
 
