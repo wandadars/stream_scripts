@@ -24,19 +24,23 @@ from droplet_histogram_tools import particle_histogram
 
 
 #Experimental Data Set
+#ExpInputFileName="AcF3_xD10_DropDis.dat"
+ExpInputFileName="AcF3_xD0.3_DropDis.dat"
 #ExpInputFileName="acetone_PDF_XOverD_10.00_Data_weibull.txt"
-#ExpFilePathBase = "/home2/neal/temp/2d_pieslice/output/particle_PDF_data/testing"
-ExpInputFileName="acetone_PDF_XOverD_10.00_Data_weibull.txt"
-ExpFilePathBase = "/home2/neal/temp/2d_pieslice/distribution_comparison"
+ExpFilePathBase = "/home2/neal/temp/2d_pieslice/weibull/output/particle_PDF_data/"
+#ExpInputFileName="acetone_PDF_XOverD_10.00_Data_weibull.txt"
+#ExpFilePathBase = "/home2/neal/temp/2d_pieslice/distribution_comparison"
 
 
 #Simulation Data set
 #SimInputFileName="acetone_PDF_XOverD_10.00_Data.txt"
-#SimFilePathBase = "/home2/neal/temp/2d_pieslice/output/particle_PDF_data/testing"
-SimInputFileName="acetone_PDF_XOverD_10.00_Data_lognormal.txt"
-SimFilePathBase = "/home2/neal/temp/2d_pieslice/distribution_comparison"
+SimFilePathBase = "/home2/neal/temp/2d_pieslice/weibull/output/particle_PDF_data/"
+#SimInputFileName="acetone_PDF_XOverD_10.00_Data_lognormal.txt"
+#SimInputFileName= "acetone_PDF_XOverD_10.00_Data_weibull.txt"
+SimInputFileName= "acetone_PDF_XOverD_-7.54_Data.txt"
+#SimFilePathBase = "/home2/neal/temp/2d_pieslice/distribution_comparison"
 
-OutputFileName = "acetone_PDF_ExpXOverD_10_SimXoverD_10_Data_NumberedWeightedLogFit" #User changes this
+OutputFileName = "acetone_PDF_ExpXOverD_0.3_SimXoverD_-7.54_Data_MassWeightedLogFit" #User changes this
 
 #Debug flag
 DebugFlag = 0	#0 for off, 1 for on
@@ -47,7 +51,7 @@ WeibullPlotFlag = 0  #1 to fit data to Weibull distribution and show on plots, 0
 RadiusAverageFlag = 1	# 0 - only take first value, 1 - average over all radial PDFs in data file
 
 #Provide the density of the liquid for converting number weighted droplet diameter PDFs to mass weighted droplet mass PDF.
-MassWeightedFlag = 0	# 0 for using the original diameter data, 1 for converting to mass weighted PDF
+MassWeightedFlag = 1	# 0 for using the original diameter data, 1 for converting to mass weighted PDF
 
 
 #Output options
@@ -58,7 +62,7 @@ PlotResolution = 500  #Desired dpi of plot
 #Factor required to convert diameter data in experimental data file to fundamental unit e.g. if file 
 #has diameters listed in terms of micrometers, then the factor needs to be 1e-6 to convert back to meters.
 #This is necessary for the section that computes the mass of the particles
-ExpDiameterConversionFactor = 1.0  #For experimental dataset
+ExpDiameterConversionFactor = 1.0e-6  #For experimental dataset
 SimDiameterConversionFactor = 1.0  #For simulation dataset 
 
 ExpDiameterPlotFactor = 1.0e6 #Factor for scaling the horizontal axis of diameter - for experimental data
