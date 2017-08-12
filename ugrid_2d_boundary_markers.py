@@ -20,7 +20,6 @@ import time
 #Store the name of the file that the user wants to plot the from.
 input_file_name = str(sys.argv[1])
 
-#Test to see if the file exists, otherwise throw exception
 try:
   os.path.isfile(input_file_name)
   print("Reading Data From: %s\n"%(input_file_name))
@@ -28,8 +27,6 @@ except IOError as e:
   print "I/O error({0}): {1}".format(e.errno, e.strerror)
   raise
 
-
-#open file if file exists, otherwise throw exception
 try:
   f=open(input_file_name,"r")
 except IOError as e:

@@ -15,87 +15,70 @@
 #
 ########################################################################
 
-
-import os #OS specific commands forreading and writing files
-import sys #For parsing user input to the script
+import os 
+import sys 
 import numpy as np
-import time
-import math
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
-from matplotlib import cm
-from matplotlib.ticker import LinearLocator, FormatStrFormatter
+
+def test_file_exists(file_name):
+    try:
+      os.path.isfile(input_file_name)
+      print("Input file detected.\n")
+      print("Reading Data From: %s\n"%(input_file_name))
+    except IOError as e:
+      print "I/O error({0}): {1}".format(e.errno, e.strerror)
+
+    try:
+      f=open(input_file_name,"r")
+    except IOError as e:
+      print "I/O error({0}): {1}".format(e.errno, e.strerror)
+      raise
+
+    return f
 
 
-avg_all_data = True  #For averaging out all repeated values of x
+def read_data_file(f):
+    #Data  format:
+    #x [y] [z] heat_flux
+    #The terms in [] may or may not be present in the actual file
+    data = []
+    line_count = 0
+    with open(input_file_name) as f:
+
+        for lines in f:
+            line = lines.rstrip()
+            line = line.split()
+
+            if line is not  None:
+                data.append([])
+                for entry in line:
+                    data[line_count].append(entry)
+                line_count = line_count + 1
+    
+    print "Number of entries in file: ", len(data)
+    num_cols = len(data[0])
+    if num_cols == 2:
+        col_names = ['x','qdot']
+    elif num_cols == 4:
+        col_names = ['x','y','z','qdot']
+
+    #Debugging
+    #for entry in data:
+    #	print entry
+    
+    f.close()
+    return (data,col_names)
 
 
-#Store the name of the file that the user wants to plot the from.
-input_file_name = str(sys.argv[1])
-
-#Test to see if the file exists, otherwise throw exception
-try:
-  os.path.isfile(input_file_name)
-  print("Reading Data From: %s\n"%(input_file_name))
-except IOError as e:
-  print "I/O error({0}): {1}".format(e.errno, e.strerror)
-  raise
-
-
-
-#open file if file exists, otherwise throw exception
-try:
-  f=open(input_file_name,"r")
-except IOError as e:
-  print "I/O error({0}): {1}".format(e.errno, e.strerror)
-  raise
-
-
-
-#Loop through entire file
-#Data in the file is structured in the following way:
-#x [y] [z] heat_flux
-#The terms in [] may or may not be present in the actual file
-data = []
-line_count = 0
-with open(input_file_name) as f:
-
-	for lines in f:
-		line = lines.rstrip()
-		line = line.split()
-
-		if line is not  None:
-			data.append([])
-			for entry in line:
-				data[line_count].append(entry)
-			line_count = line_count + 1
-
-#store the number of rows of data
-numrows = len(data)
-numcols = len(data[0])
-
-print "Number of entries in file: ", numrows
-
-#Debugging
-#for entry in data:
-#	print entry
-
-
-if numcols == 2:
-	col_names = ['x','qdot']
-elif numcols == 4:
-	col_names = ['x','y','z','qdot']
-
-
-
-if(avg_all_data == True):
-
-	averaged_data = []
+def average_data_values(data):
+    numrows = len(data)
+    numcols = len(data[0])
+    averaged_data = []
 
 	unique_x = []
-	unique_x.append(data[0][0]) #the first value is stored to initialize the process\
+	unique_x.append(data[0][0]) #the first value is stored to initialize the process
 	entry_count = 0 #Number of repeated values in the file that we average over
 	qdot_sum = 0
 	for i in range(0,numrows):
@@ -126,39 +109,58 @@ if(avg_all_data == True):
 			unique_x.append(data[i][0])
 
 
+    #for x_coord in unique_x:
+    #	print x_coord
 
-#for x_coord in unique_x:
-#	print x_coord
+    #Print & output to screen for testing
+    #for i in range(0,len(unique_x)):
+    #	for j in range(0,len(averaged_data[0])):
+    #		print averaged_data[i][j]
 
-#Print & output to screen for testing
-#for i in range(0,len(unique_x)):
-#	for j in range(0,len(averaged_data[0])):
-#		print averaged_data[i][j]
-
-
-#Print data to file
-try:
-  f=open("averaged_"+input_file_name,"w+")
-except IOError as e:
-  print "I/O error({0}): {1}".format(e.errno, e.strerror)
-  raise
-
-for i in range(0,len(averaged_data)):
-	for j in range(0,len(averaged_data[0])):
-		f.write("%10.6E\t"%(float(averaged_data[i][j])))
-	f.write("\n")
+    return averaged_data
 
 
-np_averaged_data = np.zeros((len(averaged_data),len(averaged_data[0])))
+def convert_data_to_float(data):
+    np_data = np.zeros((len(data),len(data[0])))
+    for i in range(0,len(data)):
+        for j in range(0,len(data[0])):
+        np_data[i,j] = float(data[i][j])
+    return np_data
 
-for i in range(0,len(averaged_data)):
-        for j in range(0,len(averaged_data[0])):
-		np_averaged_data[i,j] = float(averaged_data[i][j])
+
+def write_data_to_file(data):
+    try:
+      f=open("averaged_"+input_file_name,"w+")
+    except IOError as e:
+      print "I/O error({0}): {1}".format(e.errno, e.strerror)
+      raise
+
+    for i in range(0,len(data)):
+        for j in range(0,len(data[0])):
+            f.write("%10.6E\t"%(float(data[i][j])))
+        f.write("\n")
+
+
+
+
+#Main
+avg_all_data = True  #For averaging out all repeated values of x
+
+input_file_name = str(sys.argv[1])
+f = test_file_exists(input_file_name)
+
+data, col_names= read_data_file(f)
+
+if(avg_all_data == True):
+    averaged_data = average_data_values(data)
+
+np_averaged_data = convert_data_to_float(averaged_data)
+
+write_data_to_file(data,input_file_name)
 
 #Find the maximum value of the variable about to be plotted so that the plot vertical axis can be scaled appropriately
 MaxVal = np.amax(np_averaged_data[:,1])
 MinVal = np.amin(np_averaged_data[:,1])
-
 
 #Change the min and max values a little bit so that all data lies within the bounds of the plots
 MaxVal = MaxVal + 0.05*abs(MaxVal)

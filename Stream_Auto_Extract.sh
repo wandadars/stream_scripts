@@ -26,11 +26,11 @@
 #	file in the working directory.
 #
 
-ExtractString="v P r t a"
-CaseName="case"
+ExtractString="v P r t a m pResidualTT"
+CaseName="forwardStep"
 OutputFormat="en"
 
-RunString="/home/jeff/software/Loci-3.3-p3/Loci-Linux-x86_64-mpic++-rel-3-3-p3/bin/extract" 
+RunString="/home/jeff/software/Loci-4.0-beta-7/Loci-Linux-x86_64-mpic++-rel-4-0-beta-7/bin/extract"
 
 echo 'Running Loci-Stream Post-Processing Chain Submission Script'
 
@@ -113,7 +113,7 @@ done < Extracted_Timestamps.txt
 if [ $OutputFormat == "vtk" ]; then
 	rm -rf paraview_data
 	mkdir paraview_data
-	mv vtk* paraview_data
+	mv ${CaseName}_vtk.* paraview_data
 fi
 
 
