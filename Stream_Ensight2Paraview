@@ -40,7 +40,7 @@ GeomChanging = False	#True means there are individual .geo files for each timest
 #Generate a file that contains all timestamps that were extracted
 FolderNames=[]	#Initialize list to hold all ensight folder names
 
-for name in glob.glob('*_ensight*'):
+for name in glob.glob('*_ensight.*'):
 	FolderNames.append(name)
 
 NumFolders=len(FolderNames) #Extract the number of solutions

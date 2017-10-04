@@ -18,9 +18,9 @@
 #
 # It takes the following 5 arguments:
 # 1.) The starting timestep number that the extraction process should begin with. 
-# 2.) The increment in the timestep that should be used E.g. Using a step of 1 and
-#     starting at 1000 would process all timesteps after and including the 1000th. 
+# 2.) The increment in the timestep that should be used E.g. starting at 1000 with
 #     an increment of 50 would result in solutions post processed from timesteps
+#     1000, 1050, 1100, 1150, etc. 
 #	i.e. if argument 1 is 1 and argument 2 is 6 then the script will process
 #	all solutions INCLUDING and after the 6th one in the directory. This feature is 
 #	useful for processing additional solutions without re-processing every solution 
@@ -49,11 +49,14 @@ if [ $# -eq 0 ]; then
     echo "Required <options> are"
     echo "  --casename                  : tell what the Loci-Stream casename is"
     echo "  --output                    : tell what the desired output format is (en-ensight)"
-    echo "  --timesteps                 : tell what the desired range of timesteps to extract is(step, start). Put in double quotes \"1 50 \" "
+    echo "  --timesteps                 : tell what the desired range of timesteps to extract is(start,step,stop). Put values in double quotes \"1000 50 2000 \" "
     echo "  --variables                 : tell what variables should be extracted. Put values in double quotes e.g. \"v P r t a \" "
     echo " "
+    echo "Optional <options>"
+    echo "  --geom_changing             : tell whether the grid changes with each timestep( YES if true. default is NO."
+    echo " "
     echo "Example Usage:  "
-    echo "./Stream_Auto_Extract --casename supersonicJet --output en --variables "v P r t pResidualTT" "
+    echo "./Stream_Auto_Extract --casename supersonicJet --output en --timesteps "1000 50 2000" --variables "v P r t pResidualTT" "
     exit -1
 fi
 
@@ -62,6 +65,7 @@ casename=notset
 variables=notset
 output_format=notset
 timesteps=notset
+geom_changing=notset
 while [ $# -ne 0 ]; do
     case "$1" in
         --casename)
@@ -74,13 +78,18 @@ while [ $# -ne 0 ]; do
             shift
             ;;
 
+         --timesteps)
+            timesteps=$2
+            shift
+            ;;
+
         --variables)
             variables=$2
             shift
             ;;
         
-        --timesteps)
-            timesteps=$2
+        --geom_changing)
+            geom_changing=$2
             shift
             ;;
 
@@ -89,9 +98,12 @@ while [ $# -ne 0 ]; do
             echo "./Stream_Auto_Extract <options>"
             echo "Required <options> are"
             echo "  --casename                  : tell what the Loci-Stream casename is"
-            echo "  --output                    : tell what the desired output format is (en-ensight)"
-            echo "  --timesteps                 : tell what the desired range of timesteps to extract is(step, start). Put in double quotes \"1 50 \" "
+            echo "  --output                    : tell what the desired output format is (en->ensight)"
+            echo "  --timesteps                 : tell what the desired range of timesteps to extract is(start,step,stop). Put values in double quotes \"1000 50 2000 \" "
             echo "  --variables                 : tell what variables should be extracted. Put values in double quotes e.g. \"v P r t a \" "
+            echo " "
+            echo "Optional <options>"
+            echo "  --geom_changing             : tell whether the grid changes with each timestep( YES if true. default is NO."
             echo " "
             echo "Example Usage:  "
 
@@ -109,10 +121,9 @@ while [ $# -ne 0 ]; do
     shift
 done
 
-echo $casename
-echo $output_format
-echo $variables
-echo $timesteps
+#echo $casename
+#echo $output_format
+#echo $variables
 
 if [ $casename == "notset" ]; then
     echo "Case name must be specified. Use --help for proper usage."
@@ -131,11 +142,11 @@ if [ "$timesteps" == "notset" ]; then
     exit -1
 fi
 
+if [ "$geom_changing" == "notset" ]; then
+    geom_changing="0"
+fi
 
-ExtractString=$variables
-CaseName=$casename
-OutputFormat=$output_format
-TimeSteps=$timesteps
+
 
 find_extract
 if [ $RETURN_VALUE != 0 ]; then
@@ -151,80 +162,10 @@ fi
 
 echo 'Running Loci-Stream Post-Processing Chain Submission Script'
 
-##Extract Solution Times####
 echo "Extracting List of Solution Times From Solution Files"
 
-cd output
-echo "$PWD"
-#Put all files in current directory into a text file
-ls r_sca.* > temp_sni.txt
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )" #Directory of the location of this script
+python $DIR/stream_ensight_time_series.py --casename $casename --timesteps $timesteps --extract_path $RunString --extract_variables $variables --extract_format $output_format --geom_changing $geom_changing
 
-#Trim filenames up the first underscore.
-sed -n -i "s/[^_]*_//p" temp_sni.txt
-
-#Trim filenames up to the first period.
-sed  -i 's/^[^.]*.//' temp_sni.txt
-
-#Flip Lines
-sed -i '/\n/!G;s/\(.\)\(.*\n\)/&\2\1/;//D;s/.//' temp_sni.txt
-
-#Trim filename up the first underscore.
-sed -n -i "s/[^_]*_//p" temp_sni.txt
-
-#Reverse lines back to orginal orientation
-sed  -i '/\n/!G;s/\(.\)\(.*\n\)/&\2\1/;//D;s/.//' temp_sni.txt
-
-
-#At this point we have all of the unordered timestamps.
-#Sort the times and store them in the file Extracted_Timestamps.txt
-sort -k1g temp_sni.txt > Extracted_Timestamps.txt
-
-#Remove temporary files
-#rm -rf temp_sni.txt
-
-mv Extracted_Timestamps.txt ..
-cd ..
-
-
-
-### Extract Phase ###
-echo "Extracting Variables: $ExtractString"
-
-#Loop over times in the file Extracted_Timestamps.txt and extract
-Step="$(cut -d' ' -f1 <<<$TimeSteps)"
-Start="$(cut -d' ' -f2 <<<$TimeSteps)"
-
-echo $Start
-echo $Step
-
-c=1
-while read line1
-do
-
-if [ $(($c%$Step)) == 0 ]; then #Check to see if the file is a multiple of the stride # input
-
-   if [ -z "$Start" ]; then #Start extracting from beginning 
-
-      echo "Running extract on file $c for post-processing timestamp: $line1 "
-      $RunString -$OutputFormat $CaseName $line1 $ExtractString
-  
-   else
-   
-      if [ $line1 -ge $Start ]; then  #Process files starting from starting file number stored in $Start
-         
-         echo "Running extract on file $c for post-processing timestamp: $line1 "
-         $RunString -$OutputFormat $CaseName $line1 $ExtractString
-
-      fi #$c -ge $Start
-
-   fi #-z "$Start"
-
-fi #$(($c%$Step)) == 0 
-
-#Increment the counting variable, c
-c=$(($c+1))
-
-done < Extracted_Timestamps.txt
-
-echo 'Solution Extraction Finished'
+echo 'Time Series Solution Extraction Finished'
 
