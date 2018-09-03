@@ -1,17 +1,17 @@
 #! /usr/bin/env python
 
-# Purpose:	Reads the output file from the Loci 'extract' utility that contains information
-#		about the heat flux leaving a boundary.
+# Purpose:  Reads the output file from the Loci 'extract' utility that contains information
+#       about the heat flux leaving a boundary.
 #
-# Input: 	Name of the file that contains the columnated data that is sorted according to x coordinate values!
-#		Format: x y z heat_flux
+# Input:    Name of the file that contains the columnated data that is sorted according to x coordinate values!
+#       Format: x y z heat_flux
 #
-# Output: 	A set of plots showing the spatial variation of the heat flux.
+# Output:   A set of plots showing the spatial variation of the heat flux.
 #
 #
-#	Author: Christopher Neal
-#	Date   : 07/27/2016
-#	Updated: 07/27/2016
+#   Author: Christopher Neal
+#   Date   : 07/27/2016
+#   Updated: 07/27/2016
 #
 ########################################################################
 
@@ -66,7 +66,7 @@ def read_data_file(f):
 
     #Debugging
     #for entry in data:
-    #	print entry
+    #   print entry
     
     f.close()
     return (data,col_names)
@@ -77,45 +77,43 @@ def average_data_values(data):
     numcols = len(data[0])
     averaged_data = []
 
-	unique_x = []
-	unique_x.append(data[0][0]) #the first value is stored to initialize the process
-	entry_count = 0 #Number of repeated values in the file that we average over
-	qdot_sum = 0
-	for i in range(0,numrows):
-		#print "Comparing A: ",data[i][0], "   to   B:  ",unique_x[-1], "  Result is:  ",data[i][0]==unique_x[-1]
-		if(i == numrows-1): #Last value in file
-                        averaged_data.append([])
+    unique_x = []
+    unique_x.append(data[0][0]) #the first value is stored to initialize the process
+    entry_count = 0 #Number of repeated values in the file that we average over
+    qdot_sum = 0
+    for i in range(0,numrows):
+        #print "Comparing A: ",data[i][0], "   to   B:  ",unique_x[-1], "  Result is:  ",data[i][0]==unique_x[-1]
+        if(i == numrows-1): #Last value in file
+            averaged_data.append([])
+            xloc = unique_x[len(unique_x)-1]
+            averaged_data[len(unique_x)-1].append(xloc)
+            averaged_data[len(unique_x)-1].append(float(qdot_sum)/float(entry_count)) #store mean heat flux
 
-			xloc = unique_x[len(unique_x)-1]
+        elif( data[i][0] == unique_x[-1] ): #Repeat entry that needs to be averaged
+            entry_count = entry_count + 1
+            qdot_sum = qdot_sum + float(data[i][-1])
 
-                        averaged_data[len(unique_x)-1].append(xloc)
-                        averaged_data[len(unique_x)-1].append(float(qdot_sum)/float(entry_count)) #store mean heat flux
+        else:   
+            averaged_data.append([])
+            #store mean value of heat flux
+            averaged_data[len(unique_x)-1].append(unique_x[len(unique_x)-1])
+            averaged_data[len(unique_x)-1].append(float(qdot_sum)/float(entry_count))
+            
+            #reset counter and summation variable
+            entry_count = 0
+            qdot_sum = 0
 
-		elif( data[i][0] == unique_x[-1] ): #Repeat entry that needs to be averaged
-			entry_count = entry_count + 1
-			qdot_sum = qdot_sum + float(data[i][-1])
-
-		else:	
-			averaged_data.append([])
-			#store mean value of heat flux
-			averaged_data[len(unique_x)-1].append(unique_x[len(unique_x)-1])
-			averaged_data[len(unique_x)-1].append(float(qdot_sum)/float(entry_count))
-			
-			#reset counter and summation variable
-			entry_count = 0
-			qdot_sum = 0
-
-			#Add the newly found coordinate to the list of unique x coordinates
-			unique_x.append(data[i][0])
+            #Add the newly found coordinate to the list of unique x coordinates
+            unique_x.append(data[i][0])
 
 
     #for x_coord in unique_x:
-    #	print x_coord
+    #   print x_coord
 
     #Print & output to screen for testing
     #for i in range(0,len(unique_x)):
-    #	for j in range(0,len(averaged_data[0])):
-    #		print averaged_data[i][j]
+    #   for j in range(0,len(averaged_data[0])):
+    #       print averaged_data[i][j]
 
     return averaged_data
 
@@ -124,13 +122,13 @@ def convert_data_to_float(data):
     np_data = np.zeros((len(data),len(data[0])))
     for i in range(0,len(data)):
         for j in range(0,len(data[0])):
-        np_data[i,j] = float(data[i][j])
+            np_data[i,j] = float(data[i][j])
     return np_data
 
 
-def write_data_to_file(data):
+def write_data_to_file(data, input_file_name):
     try:
-      f=open("averaged_"+input_file_name,"w+")
+      f=open(input_file_name + '_averaged',"w+")
     except IOError as e:
       print "I/O error({0}): {1}".format(e.errno, e.strerror)
       raise
@@ -144,7 +142,7 @@ def write_data_to_file(data):
 
 
 #Main
-avg_all_data = True  #For averaging out all repeated values of x
+avg_all_data = False  #For averaging out all repeated values of x
 
 input_file_name = str(sys.argv[1])
 f = test_file_exists(input_file_name)
@@ -152,21 +150,22 @@ f = test_file_exists(input_file_name)
 data, col_names= read_data_file(f)
 
 if(avg_all_data == True):
-    averaged_data = average_data_values(data)
+    data = average_data_values(data)
 
-np_averaged_data = convert_data_to_float(averaged_data)
+np_data = convert_data_to_float(data)
 
-write_data_to_file(data,input_file_name)
+if avg_all_data == True:
+    write_data_to_file(data, input_file_name)
 
 #Find the maximum value of the variable about to be plotted so that the plot vertical axis can be scaled appropriately
-MaxVal = np.amax(np_averaged_data[:,1])
-MinVal = np.amin(np_averaged_data[:,1])
+MaxVal = np.amax(np_data[:,1])
+MinVal = np.amin(np_data[:,1])
 
 #Change the min and max values a little bit so that all data lies within the bounds of the plots
 MaxVal = MaxVal + 0.05*abs(MaxVal)
 MinVal = MinVal - 0.05*abs(MinVal)
  
-plt.plot(np_averaged_data[:,0],np_averaged_data[:,-1], linestyle='None',marker='o')
+plt.plot(np_data[:,0],np_data[:,-1], linestyle='None',marker='o')
 plt.xlabel('X (meters)')
 plt.ylabel('Heat Flux (qdot)')
 plt.ylim([MinVal, MaxVal])

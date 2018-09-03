@@ -1,8 +1,8 @@
 #! /usr/bin/env python
 
 # Purpose:	Reads an output file from Loci-Stream and parses the contents to extract the
-#		fluxes on a user specified boundary, plots the data, and writes the images
-#               to disk.
+#		    fluxes on a user specified boundary, plots the data, and writes the images
+#           to disk.
 #
 # Input: 	Name of the boundary to extract data from
 #
