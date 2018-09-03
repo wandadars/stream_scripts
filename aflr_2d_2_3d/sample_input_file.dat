@@ -1,0 +1,5 @@
+grid_base_name  grid_3d
+boundary_1  BC_14
+boundary_2  BC_13
+initial_wedge_angle 4.5
+

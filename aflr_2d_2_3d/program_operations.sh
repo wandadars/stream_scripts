@@ -36,28 +36,34 @@ caseName=$1
 
 echo $@
 
-
+vogmergePath= which vogmerge
 if [ $2 -eq 0 ]; then 
+    echo "Using vogmerge found here: $vogmergePath"
 	echo "Using Command: vogmerge -g $1.vog -o $1_starting.vog -bc $3,face1 -bc $4,face2"
 	vogmerge -g $1.vog -o $1_starting.vog -bc $3,face1 -bc $4,face2
+    wait
 
 elif [ $2 -eq 1 ]; then 
 	echo "Using Command: vogmerge -g $1_starting.vog -o $1_rotated_1.vog -xrotate $3"
 	vogmerge -g $1_starting.vog -o $1_rotated_1.vog -xrotate -$3
+    wait
 
 elif [ $2 -eq 2 ]; then
 	echo "Using Command: vogmerge -g $1_starting.vog -glue face2 -g $1_rotated_1.vog -glue face1 -o $1_combined.vog"
-        vogmerge -g $1_starting.vog -glue face2 -g $1_rotated_1.vog -glue face1 -o $1_combined.vog -tol 1e-6
+    vogmerge -g $1_starting.vog -glue face2 -g $1_rotated_1.vog -glue face1 -o $1_combined.vog -tol 1e-6
+    wait
 
 elif [ $2 -eq 3 ]; then
 	echo "Using Command: vogmerge -g $1_combined.vog -glue face2 -g $1_rotated_1.vog -glue face1 -o $1_combined_2.vog"
-        vogmerge -g $1_combined.vog -glue face2 -g $1_rotated_1.vog -glue face1 -o $1_combined_2.vog -tol 1e-6
-	mv $1_combined_2.vog $1_combined.vog
+    vogmerge -g $1_combined.vog -glue face2 -g $1_rotated_1.vog -glue face1 -o $1_combined_2.vog -tol 1e-6
+    wait
+    mv $1_combined_2.vog $1_combined.vog
 
 elif [ $2 -eq 4 ]; then
 	echo "Using Command: vogmerge -g $1_combined.vog -glue face2,face1 -g $1_rotated_1.vog -glue face1,face2 -o $1_combined_2.vog"
-        vogmerge -g $1_combined.vog -glue face2,face1 -g $1_rotated_1.vog -glue face1,face2 -o $1_combined_2.vog -tol 1e-6
-	mv $1_combined_2.vog $1_combined.vog
+    vogmerge -g $1_combined.vog -glue face2,face1 -g $1_rotated_1.vog -glue face1,face2 -o $1_combined_2.vog -tol 1e-6
+	wait
+    mv $1_combined_2.vog $1_combined.vog
 fi  
 
 
