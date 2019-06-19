@@ -35,9 +35,7 @@ def test_file_exists(file_name):
     except IOError as e:
       print "I/O error({0}): {1}".format(e.errno, e.strerror)
       raise
-
     return f
-
 
 def read_data_file(f):
     #Data  format:
@@ -46,11 +44,9 @@ def read_data_file(f):
     data = []
     line_count = 0
     with open(input_file_name) as f:
-
         for lines in f:
             line = lines.rstrip()
             line = line.split()
-
             if line is not  None:
                 data.append([])
                 for entry in line:
@@ -69,10 +65,9 @@ def read_data_file(f):
     #   print entry
     
     f.close()
-    return (data,col_names)
+    return data, col_names
 
-
-def average_data_values(data):
+def spatially_average_data_values(data):
     numrows = len(data)
     numcols = len(data[0])
     averaged_data = []
@@ -81,18 +76,16 @@ def average_data_values(data):
     unique_x.append(data[0][0]) #the first value is stored to initialize the process
     entry_count = 0 #Number of repeated values in the file that we average over
     qdot_sum = 0
-    for i in range(0,numrows):
+    for i in range(0, numrows):
         #print "Comparing A: ",data[i][0], "   to   B:  ",unique_x[-1], "  Result is:  ",data[i][0]==unique_x[-1]
-        if(i == numrows-1): #Last value in file
+        if i == numrows - 1: #Last value in file
             averaged_data.append([])
             xloc = unique_x[len(unique_x)-1]
             averaged_data[len(unique_x)-1].append(xloc)
-            averaged_data[len(unique_x)-1].append(float(qdot_sum)/float(entry_count)) #store mean heat flux
-
+            averaged_data[len(unique_x)-1].append(float(qdot_sum) / float(entry_count)) #store mean heat flux
         elif( data[i][0] == unique_x[-1] ): #Repeat entry that needs to be averaged
             entry_count = entry_count + 1
             qdot_sum = qdot_sum + float(data[i][-1])
-
         else:   
             averaged_data.append([])
             #store mean value of heat flux
@@ -114,9 +107,7 @@ def average_data_values(data):
     #for i in range(0,len(unique_x)):
     #   for j in range(0,len(averaged_data[0])):
     #       print averaged_data[i][j]
-
     return averaged_data
-
 
 def convert_data_to_float(data):
     np_data = np.zeros((len(data),len(data[0])))
@@ -124,7 +115,6 @@ def convert_data_to_float(data):
         for j in range(0,len(data[0])):
             np_data[i,j] = float(data[i][j])
     return np_data
-
 
 def write_data_to_file(data, input_file_name):
     try:
@@ -140,21 +130,20 @@ def write_data_to_file(data, input_file_name):
 
 
 
-
 #Main
-avg_all_data = False  #For averaging out all repeated values of x
+spatially_avg_all_data = True  #For averaging out all repeated values of x
 
 input_file_name = str(sys.argv[1])
 f = test_file_exists(input_file_name)
 
 data, col_names= read_data_file(f)
 
-if(avg_all_data == True):
-    data = average_data_values(data)
+if(spatially_avg_all_data == True):
+    data = spatially_average_data_values(data)
 
 np_data = convert_data_to_float(data)
 
-if avg_all_data == True:
+if spatially_avg_all_data == True:
     write_data_to_file(data, input_file_name)
 
 #Find the maximum value of the variable about to be plotted so that the plot vertical axis can be scaled appropriately
