@@ -1,10 +1,11 @@
+import logging
+
+logger = logging.getLogger(__name__)
 
 class user_input_parser(object):
-
     def __init__(self):
         self.file_name = []
         self.file_path = []
-        
 
     def parse_user_input_file(self,file_path, file_name):
         import sys
@@ -25,8 +26,15 @@ class user_input_parser(object):
                     Line = Line.split('=')
                     input_data[Line[0].strip()] = Line[1].strip()
         f.close()
-
         return input_data
 
+def compute_filename_numbers(start, stop, step):
+    num_files = (stop - start)/step
+    file_indicies = []
+    iterate = start
+    for i in range(0, num_files):   #make list of timestamps
+        file_indicies.append(iterate)
+        iterate = iterate + step
+    return file_indicies
 
 
