@@ -52,7 +52,7 @@ class HDF5ParticleDataReader(object):
             if 'DATA {' in Line:	#Real data is on next line. Prepare to read
                 ready_to_read = True
 
-        print("Detected %d parcels in data file"%(num_entries))
+        logger.info("Detected %d parcels in data file"%(num_entries))
         self.num_parcels = num_entries
 
         #Close and delete the data file
@@ -130,7 +130,8 @@ class HDF5ParticleDataReader(object):
         for k in range(0, 3):
             position_data[k] = list(itertools.chain.from_iterable(position_data[k]))
 
-        logger.info("Number of rows in parcel position data set:%d\nNumber of columns in parcel position data set: %d"%(len(position_data), len(position_data[0])))
+        logger.info("Number of rows in parcel position data set:%d"%(len(position_data)))
+        logger.info("Number of columns in parcel position data set: %d"%(len(position_data[0])))
         return position_data
 
     def read_particle_parcel_data(self):
@@ -270,5 +271,62 @@ class HDF5ParticlePDFPlotterDataReader(HDF5ParticleDataReader):
 
 
 
+class VOFDataReader(object):
+    def __init__(self, case_name, time_stamp, script_path):
+        self.case_name = case_name
+        self.time_stamp = time_stamp
+        self.script_path = script_path
 
+    def read_particle_diameter_data(self):
+        file_name = 'dropletSDF_' + str(self.time_stamp) + '.dat'
+
+        try:
+            f = open(file_name,'r')
+        except IOError as e:
+            logger.error('Unable to open file') #Does not exist OR no read permissions
+            raise IOError
+
+        logger.info('Storing diameter data from file: %s'%(file_name))
+        diameter_data = []
+        ready_to_read = False
+        num_entries = 0
+        for Line in f:
+            #Stop when we have been reading data and we encounter a brace character on the line
+            if ready_to_read == True  and '}' in Line :
+                break
+
+            if ready_to_read == True:
+                #Parse line
+                LineData = Line.rstrip()
+                LineData = LineData.replace(',', ' ')
+                LineData = LineData.split()
+
+                diameter_data.append(LineData)
+
+                #Count number of entries on this line
+                num_entries += len(LineData)
+
+            if 'DATA {' in Line:    #Real data is on next line. Prepare to read
+                ready_to_read = True
+
+        logger.info("Detected %d parcels in data file"%(num_entries))
+        self.num_parcels = num_entries
+
+        #Close and delete the data file
+        f.close()
+        os.remove('tempPythonFile.txt')
+
+        #Perform list comprehension to un-nest the list that was made(not sure why it is nested, but it is)
+        diameter_data = list(itertools.chain.from_iterable(diameter_data))
+        return diameter_data
+
+
+class VOFASCIIDataReader(VOFDataReader):
+    def __init__(self):
+        super(VOFASCIIDataReader, self).__init__()
+
+    def read_particle_data(self):
+        diameter_data = self.read_particle_diameter_data()
+        position_data = self.read_particle_position_data()
+        pass
 

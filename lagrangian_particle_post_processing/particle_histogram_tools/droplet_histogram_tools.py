@@ -30,170 +30,149 @@ class particle_histogram:
         return self.pdf
 
     def get_cdf(self):
-	return self.cdf
+        return self.cdf
 
     def get_widths(self):
         if not self.widths:
             self.compute_widths()
-        
         return self.widths
 
     def get_num_bins(self):
         return self.num_bins
 
     def read_data(self,FilePath,DebugFlag=0):
-            import itertools
-            import string
-            import numpy as np
-            import sys
+        import itertools
+        import string
+        import numpy as np
+        import sys
 
-            print("Reading Data From: %s"%(FilePath))
-            #Open input file
-            try:
-                    f = open(FilePath, "r")
-            except:
-                    print("Failed to Input File!")
-                    sys.exit(1)
+        print("Reading Data From: %s"%(FilePath))
+        #Open input file
+        try:
+            f = open(FilePath, "r")
+        except:
+            print("Failed to Input File!")
+            sys.exit(1)
 
-            #Loop over all lines in input file and parse
-            count=0 #Line counter
-            print("Reading Data File Contents")
-            DataArrayList = [] #Initialize list
-            RowCount = 0 #For counting number of data rows in file
-            for Line in f:
+        #Loop over all lines in input file and parse
+        count = 0 #Line counter
+        print("Reading Data File Contents")
+        DataArrayList = [] #Initialize list
+        RowCount = 0 #For counting number of data rows in file
+        for Line in f:
+            if(count == 0): #First line with x/D coordinate
+                tmp = Line.rstrip() #Remove newline character
+                tmp = tmp.split()
+                xOverD = float(tmp[-1]) #Extract coordinate(Last element in the split list)
+                print("X/D Coordinate is: %f"%(xOverD))
+            elif(count == 5): #Line with r/D coordinates
+                #Remove all non-numeric characters from the string
+                tmp = Line.rstrip()
+                tmp = "".join(c for c in tmp if c in '1234567890.' or c in string.whitespace)
+                tmp = tmp.split()
+                NumRadii = len(tmp)
+                rOverD = tmp
 
-                    if(count == 0): #First line with x/D coordinate
-                            tmp = Line.rstrip() #Remove newline character
-                            tmp = tmp.split()
-                            xOverD = float(tmp[-1]) #Extract coordinate(Last element in the split list)
-                            print("X/D Coordinate is: %f"%(xOverD))
-
-                    elif(count == 5): #Line with r/D coordinates
-                            #Remove all non-numeric characters from the string
-                            tmp = Line.rstrip()
-                            tmp = "".join(c for c in tmp if c in '1234567890.' or c in string.whitespace)
-                            tmp = tmp.split()
-                            NumRadii = len(tmp)
-                            rOverD = tmp
-    
-                            print("Number of Radii at which particle PDF is measured: %d"%(NumRadii))
-                            print("Values of r/D: %s\n"%(rOverD))
-
-                    elif(count >=8): #This is where the raw pdf data is located in the file
-
-                            tmp = Line.rstrip()
-
-                            #Only perform storage on lines that are not blank in the file
-                            if(tmp != ''):
-
-                                    tmp = tmp.split()
-                                    if(RowCount == 0): #First item in list
-                                            DataArrayList.append([])
-                                            DataArrayList[RowCount].append(tmp)
-                                            RowCount = RowCount + 1
-                                    else:
-                                            DataArrayList.append([])
-                                            DataArrayList[RowCount].append(tmp)
-                                            RowCount = RowCount + 1
-
-                    count = count + 1
-
-            f.close()
-
-            #Store number of diameter bins
-            print("Number of particle diameter bins: %d"%(RowCount))
-            self.num_bins = RowCount
-
-            #Perform list comprehension to un-nest the list that was made(not sure why it is nested, but it is)
-            DataArrayList=list(itertools.chain.from_iterable(DataArrayList))
-
-            #For Debugging purposes - print DataArray
-            if(DebugFlag == 1):
-                    for i in range(0,self.num_bins):
-                            print("%s\n"%(str(DataArrayList[i][:])))
-
-            #Now store as a numpy numeric array
-            #DataArrayList has the following data
-            #diameter       R1-pdf  R2-pdf  R3-pdf  ...RNumRadii-pdf
-
-            #Now store as a numpy numeric array
-            DataArray = np.zeros((self.num_bins,NumRadii+1))
-            for i in range(0,self.num_bins):
-                    for j in range(0,NumRadii+1):
-                            DataArray[i][j] = float(DataArrayList[i][j])
-
-
-            #Compute number weighted diameter PDF
-            for i in range(0,self.num_bins):  #Initialize to 0 all elements
-                    self.pdf.append(0)
-
-            for i in range(0,self.num_bins):
-                    self.horizontal_bins.append(DataArray[i][0]) #Store diameter bins
-
-                    if(self.RadiusAverageFlag == 1):
-                            for j in range(0,NumRadii):
-                                    if(j==0):
-                                            self.pdf[i] = DataArray[i][1]
-                                    else:
-                                            self.pdf[i] = self.pdf[i] + DataArray[i][j+1]
-                                    
+                print("Number of Radii at which particle PDF is measured: %d"%(NumRadii))
+                print("Values of r/D: %s\n"%(rOverD))
+            elif(count >=8): #This is where the raw pdf data is located in the file
+                tmp = Line.rstrip()
+                #Only perform storage on lines that are not blank in the file
+                if(tmp != ''):
+                    tmp = tmp.split()
+                    if(RowCount == 0): #First item in list
+                        DataArrayList.append([])
+                        DataArrayList[RowCount].append(tmp)
+                        RowCount = RowCount + 1
                     else:
-                            self.pdf[i] = DataArray[i][1] #Store first PDF value
+                        DataArrayList.append([])
+                        DataArrayList[RowCount].append(tmp)
+                        RowCount = RowCount + 1
+            count = count + 1
+        f.close()
 
+        #Store number of diameter bins
+        print("Number of particle diameter bins: %d"%(RowCount))
+        self.num_bins = RowCount
 
+        #Perform list comprehension to un-nest the list that was made(not sure why it is nested, but it is)
+        DataArrayList = list(itertools.chain.from_iterable(DataArrayList))
+
+        #For Debugging purposes - print DataArray
+        if DebugFlag == 1:
+            for i in range(0,self.num_bins):
+                print("%s\n"%(str(DataArrayList[i][:])))
+
+        #Now store as a numpy numeric array
+        #DataArrayList has the following data
+        #diameter       R1-pdf  R2-pdf  R3-pdf  ...RNumRadii-pdf
+
+        #Now store as a numpy numeric array
+        DataArray = np.zeros((self.num_bins,NumRadii+1))
+        for i in range(0,self.num_bins):
+            for j in range(0,NumRadii+1):
+                DataArray[i][j] = float(DataArrayList[i][j])
+
+        #Compute number weighted diameter PDF
+        for i in range(0,self.num_bins):  #Initialize to 0 all elements
+            self.pdf.append(0)
+
+        for i in range(0,self.num_bins):
+                self.horizontal_bins.append(DataArray[i][0]) #Store diameter bins
+                if self.RadiusAverageFlag == 1:
+                    for j in range(0, NumRadii):
+                        if j==0:
+                            self.pdf[i] = DataArray[i][1]
+                        else:
+                            self.pdf[i] = self.pdf[i] + DataArray[i][j+1]
+                else:
+                    self.pdf[i] = DataArray[i][1] #Store first PDF value
 
 
     def compute_widths(self):
         #Integrate data assuming that points are bin heights and widths are variable
-        
         #Make sure to initialize to zero
-        if(len(self.widths) > 0 ):
-            for i in range(0,self.num_bins):
+        if len(self.widths) > 0:
+            for i in range(0, self.num_bins):
                 self.widths[i] = 0		
         else:
-            for i in range(0,self.num_bins):
+            for i in range(0, self.num_bins):
                 self.widths.append(0)
 
-        for i in range(0,self.num_bins):
-            if(i == 0):
+        for i in range(0, self.num_bins):
+            if i == 0:
                 self.widths[i] =  0.5*(self.horizontal_bins[i+1] - self.horizontal_bins[i]) 
-            elif(i==self.num_bins-1):
+            elif i==self.num_bins-1:
                 self.widths[i] =  0.5*(self.horizontal_bins[i] - self.horizontal_bins[i-1]) 
             else:
                 self.widths[i] = 0.5*(self.horizontal_bins[i+1] - self.horizontal_bins[i]) + 0.5*(self.horizontal_bins[i] - self.horizontal_bins[i-1]) 
 
-
-
     def normalize_pdf(self):
-        Area = self.compute_histogram_area()
-        for i in range(0,self.num_bins):
-            self.pdf[i] = self.pdf[i]/Area
-
+        area = self.compute_histogram_area()
+        for i in range(0, self.num_bins):
+            self.pdf[i] = self.pdf[i] / area
 
     def compute_histogram_area(self):
         C = 0 #Initialize integral to zero
         self.compute_widths() #Make sure the widths are defined
-        for i in range(0,self.num_bins):
-            C = C + self.pdf[i]*self.widths[i]
-
+        for i in range(0, self.num_bins):
+            C += self.pdf[i] * self.widths[i]
         return C
 
     def compute_cdf(self):
-        Area = self.compute_histogram_area()
-	normalized_pdf = []
-        for i in range(0,self.num_bins):
-	    normalized_pdf.append(0)
-            normalized_pdf[i] = self.pdf[i]/Area
+        area = self.compute_histogram_area()
+        normalized_pdf = []
+        for i in range(0, self.num_bins):
+            normalized_pdf.append(0)
+            normalized_pdf[i] = self.pdf[i] / area
 
-	self.compute_widths()
-	self.cdf = []
-	for i in range(0,self.num_bins):
-	   if i == 0 :
-	       self.cdf.append(normalized_pdf[i]*self.widths[i])
-	   else:    
-	       self.cdf.append( self.cdf[i-1] + normalized_pdf[i]*self.widths[i] )
-
-
+        self.compute_widths()
+        self.cdf = []
+        for i in range(0, self.num_bins):
+            if i == 0:
+                self.cdf.append(normalized_pdf[i] * self.widths[i])
+            else:    
+                self.cdf.append(self.cdf[i-1] + normalized_pdf[i] * self.widths[i] )
 
     def sample_from_pdf(self, NumSamples, RejectionM, show_samples=False, DebugFlag=0):
             import numpy as np
@@ -211,22 +190,22 @@ class particle_histogram:
             #Generate the empirical CDF of the normalized PDF
             g_cdf = np.zeros(self.num_bins)
             for i in range(1,self.num_bins):
-                    g_cdf[i] = g_cdf[i-1] + g_pdf[i]*self.widths[i]
+                g_cdf[i] = g_cdf[i-1] + g_pdf[i]*self.widths[i]
 
             g_cdf[-1] = 1 #Set the last value to be 1        
 
             if(DebugFlag == 1):
-                    plt.figure()
-                    plt.plot(self.horizontal_bins,g_pdf)
-                    plt.xlabel(r'$Diameter (\mu meters)$')
-                    plt.ylabel('PDF')
-                    plt.show()
+                plt.figure()
+                plt.plot(self.horizontal_bins,g_pdf)
+                plt.xlabel(r'$Diameter (\mu meters)$')
+                plt.ylabel('PDF')
+                plt.show()
 
-                    plt.figure()
-                    plt.plot(self.horizontal_bins,g_cdf)
-                    plt.xlabel(r'$Diameter (\mu meters)$')
-                    plt.ylabel('CDF')
-                    plt.show()
+                plt.figure()
+                plt.plot(self.horizontal_bins,g_cdf)
+                plt.xlabel(r'$Diameter (\mu meters)$')
+                plt.ylabel('CDF')
+                plt.show()
 
             count = 0
             while(count < N): #Loop until number of samples have been generated
@@ -265,7 +244,7 @@ class particle_histogram:
                             ratio = 0
                     else:
                             ratio = probability_of_d_sample/(M*probability_of_d_sample)
-    
+
                     #print("Rejection Ratio: %10.6E"%(ratio))
                     if(ratio >= U_rejection):
                             GeneratedData.append(d_sample)
@@ -277,28 +256,27 @@ class particle_histogram:
 
 
 
-    def compute_volume_weighted_pdf(self,overwrite_pdfs= False):
+    def compute_volume_weighted_pdf(self, overwrite_pdfs= False):
         #Compute Volume Weighted PDF
         #Note that for cases where the density is constant, the mass and volume distributions are the same
         #The diameter histogram must already be defined.
         import math
         
         #To have a mass weighted PDF we scale the vertical axis to be the mass of the particles in that bin
-        for i in range(0,self.num_bins):
+        for i in range(0, self.num_bins):
             self.vol_pdf.append(0)
 
         C = 0 #Initialize integral to zero
         self.compute_widths() #Make sure the widths are defined
-        for i in range(0,self.num_bins):
-            C = C + self.pdf[i]*self.widths[i]*self.horizontal_bins[i]**3
+        for i in range(0, self.num_bins):
+            C += self.pdf[i] * self.widths[i] * self.horizontal_bins[i]**3
         
         for i in range(0,self.num_bins):
-            self.vol_pdf[i] = (self.horizontal_bins[i]**3)*self.pdf[i]/(C) #Store mass of particles in bin
+            self.vol_pdf[i] = (self.horizontal_bins[i]**3) * self.pdf[i] / C #Store mass of particles in bin
 
-        if(overwrite_pdfs == True):
-            for i in range(0,self.num_bins):
+        if overwrite_pdfs == True:
+            for i in range(0, self.num_bins):
                 self.pdf[i] = self.vol_pdf[i]
-
 
 
     def add_data(self,horizontal_bin_values,pdf_values):
@@ -312,8 +290,8 @@ class particle_histogram:
         for i in range(0,self.num_bins):
             self.horizontal_bins[i] = self.horizontal_bins[i]*scaling_factor
 
-	#Update widths based on new bin values
-	self.compute_widths()
+    #Update widths based on new bin values
+    self.compute_widths()
 
 
     def plot_histogram(self):

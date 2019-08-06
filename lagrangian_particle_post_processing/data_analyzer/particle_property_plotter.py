@@ -26,7 +26,7 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from matplotlib import cm
 from matplotlib.ticker import LinearLocator, FormatStrFormatter
-import hdf5_particle_reader 
+import particle_data_reader 
 
 #For calling the h5dump shell script
 ShellScriptPath="/home/neal/codes/stream_scripts/lagrangian_particle_post_processing/final_combined_code"
@@ -65,7 +65,7 @@ particle_diameters = []
 for i in range(0,NumFiles):
     #Read particle data from HDF5 data files
     print("Reading Data from file: %d"%(i+1))
-    hdf5_reader = hdf5_particle_reader.HDF5ParticlePropertyPlotterDataReader(CaseName, file_indices[i], ShellScriptPath)
+    hdf5_reader = particle_data_reader.HDF5ParticlePropertyPlotterDataReader(CaseName, file_indices[i], ShellScriptPath)
     ParticleData = hdf5_reader.read_hdf_particle_data()
     
     print(ParticleData)

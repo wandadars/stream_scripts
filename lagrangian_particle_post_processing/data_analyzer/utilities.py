@@ -9,11 +9,11 @@ class user_input_parser(object):
 
     def parse_user_input_file(self,file_path, file_name):
         import sys
-        print("Reading Data From: %s"%(file_name))
+        logger.info("Reading Data From: %s"%(file_name))
         try:
             f = open(file_path, "r")
         except:
-            print("Failed to Input File!")
+            logger.info("Failed to Input File!")
             sys.exit(1)
 
 
