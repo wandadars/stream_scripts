@@ -140,15 +140,63 @@ class LagrangianParticleDataAnalyzer(object):
         """
         return data
 
+    def read_data_and_place_parcels_into_spatial_bins(self):
+        #Initialize 3D array of objects to hold particle data for all bins in each data file. Creates NumFiles x nXBins x nYBins array
+        spatially_binned_parcels = self.initialize_particle_data_structure()     
+        file_indices = self.get_file_indices()
+        logger.info('Reading Data from timesteps:')
+        logger.info(file_indices)
+        for i, time_stamp in enumerate(file_indices):
+            #Read particle data from HDF5 data files
+            logger.info("Reading Data from file: %d"%(i + 1))
+            data_reader = self.create_hdf5_reader(time_stamp)
+            particle_data = data_reader.read_hdf_particle_data()
+            logger.info("Number of parcels in dataset %d :\t%d"%(i + 1, len(particle_data)))
+
+            try:
+                radial_bin_flag = int(self.user_input_data['radial_bin_flag'])
+            except KeyError:
+                logger.error('radial_bin_flag missing from input file. 0 for cartesian y bins, 1 for cylindrical R bins. If 1, treats y variable as r in code. Defaulting to 0 .')
+                radial_bin_flag = 0
+
+            #Loop over all bins and store data about particles within the bin
+            x_bin_coords = self.particle_bin_domain.compute_x_bin_coords()
+            y_bin_coords = self.particle_bin_domain.compute_y_bin_coords()
+
+            #Loop over Y bins & sweep over the X bins and store particle information
+            logger.info("Counting Particles for File: %d"%(i + 1))
+            num_parcels = len(particle_data)
+            num_x_bins = self.particle_bin_domain.num_x_bins
+            num_y_bins = self.particle_bin_domain.num_y_bins
+            for j in range(0, num_x_bins):
+                logger.info("Placing parcels into X-bin:\t%d"%(j + 1))
+                for k in range(0, num_y_bins):
+                    logger.info("\tPlacing parcels into Y-bin:\t%d"%(k + 1))
+                    parcels_in_bin = 0
+                    for parcel in particle_data:  #Loop over all parcels to find which are in the current bin
+                        parcel_x = float(parcel['x'])
+                        if radial_bin_flag == 1:
+                            parcel_y = math.sqrt(float(parcel['y'])**2 + float(parcel['z'])**2)
+                        else:
+                            parcel_y = float(parcel['y'])
+                        if parcel_x < x_bin_coords[1][j] and parcel_x >= x_bin_coords[0][j] and parcel_y < y_bin_coords[1][k] and parcel_y >= y_bin_coords[0][k]:
+                            #logger.debug("i = %d\tj = %d\tk = %d\n"%(i+1,m+1,k+1))
+                            spatially_binned_parcels[i][j][k].add_data(parcel['diameter'], parcel['particles_per_parcel'])
+                            parcels_in_bin += 1
+                    logger.info("\t\tNumber of Parcels in X Bin(%d) & Y Bin(%d) is:\t %d"%(j + 1, k + 1, parcels_in_bin))
+        return spatially_binned_parcels      
+
     def convert_particle_data_to_floating_point(self, particle_data):
-        #Compute size of ParticleData 2D list
-        numrows = len(particle_data)  
-        numcols = len(particle_data[0])
-        #Allocate a numpy array to store the floating point data & copy into array
-        real_particle_data = np.zeros((numrows, numcols))
-        for i in range(0, numrows):
-            for j in range(0, numcols):
-                real_particle_data[i][j] = float(particle_data[i][j])
+        """
+        particle_data is a list of dictionary entries with each dict being data about
+        a particular particle.
+        """
+        real_particle_data = []  
+        for particle in particle_data:
+            entry = {}
+            for particle_property in particle: #dict key loop
+                entry[particle_property] = float(particle[particle_property])
+            real_particle_data.append(entry) 
         return real_particle_data
 
     def remap_particle_diameters_to_custom_bins(self, particle_data):
@@ -261,51 +309,8 @@ class LagrangianParticleSMDDataAnalyzer(LagrangianParticleDataAnalyzer):
         self.particle_bin_domain.print_x_bin_coords(d_liq)
         self.particle_bin_domain.print_y_bin_coords(d_liq)
 
-        #Initialize 3D array of objects to hold particle data for all bins in each data file. Creates NumFiles x nXBins x nYBins array
-        pdf_data = self.initialize_particle_data_structure() 
-        file_indices = self.get_file_indices()
-        for i, time_stamp in enumerate(file_indices):
-            #Read particle data from HDF5 data files
-            logger.info("Reading Data from file: %d"%(i + 1))
-            hdf5_data_reader = self.create_hdf5_reader(time_stamp)
-            particle_data = hdf5_data_reader.read_hdf_particle_data()
-            logger.info("Number of parcels in dataset %d :\t%d"%(i + 1, len(particle_data)))
-            real_particle_data = self.convert_particle_data_to_floating_point(particle_data) 
-
-            #Store particle radius in the y and z positions of the data array
-            try:
-                radial_bin_flag = int(self.user_input_data['radial_bin_flag'])
-            except KeyError:
-                logger.error('radial_bin_flag missing from input file. 0 for cartesian y bins, 1 for cylindrical R bins. If 1, treats y variable as r in code. Defaulting to 0 .')
-                radial_bin_flag = 0
-            
-            if radial_bin_flag == 1:
-                for k in range(0, len(particle_data)):
-                    real_particle_data[k][2] = math.sqrt(real_particle_data[k][2]**2 + real_particle_data[k][3]**2)
-                    real_particle_data[k][3] = real_particle_data[k][2]
-
-            #Loop over all bins and store data about particles within the bin
-            x_bin_coords = self.particle_bin_domain.compute_x_bin_coords() 
-            y_bin_coords = self.particle_bin_domain.compute_y_bin_coords()
-            
-            #Loop over Y bins & sweep over the X bins and store particle information
-            logger.info("Counting Particles for File: %d"%(i + 1))
-            num_parcels = len(particle_data)
-            num_x_bins = self.particle_bin_domain.num_x_bins 
-            num_y_bins = self.particle_bin_domain.num_y_bins
-            for j in range(0, num_x_bins):
-                logger.info("Placing parcels into X-bin:\t%d"%(j + 1))
-                for k in range(0, num_y_bins):
-                    logger.info("\tPlacing parcels into Y-bin:\t%d"%(k + 1))
-                    parcels_in_bin = 0
-                    for m in range(0, num_parcels):  #Loop over all parcels to find which are in the current bin
-                        if real_particle_data[m][1] < x_bin_coords[1][j] and real_particle_data[m][1] >= x_bin_coords[0][j] and real_particle_data[m][2] < y_bin_coords[1][k] and real_particle_data[m][2] >= y_bin_coords[0][k]:
-                                #logger.debug("i = %d\tj = %d\tk = %d\n"%(i+1,m+1,k+1))
-                                pdf_data[i][j][k].add_data(particle_data[m][0], particle_data[m][4])
-                                parcels_in_bin += 1
-                    logger.info("\t\tNumber of Parcels in X Bin(%d) & Y Bin(%d) is:\t %d"%(j + 1, k + 1, parcels_in_bin))
-                    
-
+        pdf_data = self.read_data_and_place_parcels_into_spatial_bins()
+        
         self.inplace_sort_particle_data_by_diameter(pdf_data)
         self.inplace_compression_of_particle_data(pdf_data)
         avg_pdf = self.inplace_merge_particle_data_over_all_files(pdf_data)
@@ -318,21 +323,26 @@ class LagrangianParticleSMDDataAnalyzer(LagrangianParticleDataAnalyzer):
         
         if diameter_bin_flag == 1: #Use the user defined bins
             self.remap_particle_diameters_to_custom_bins(avg_pdf)
-        self.write_output(diameter_bin_flag, avg_pdf)
+        self.write_output(avg_pdf)
         logger.info("\n Program has finished... \n")
 
-    def compute_sauter_mean_diameter(self, avg_pdf, bin_flag):
+    def compute_sauter_mean_diameter(self, avg_pdf):
+        try:
+            diameter_bin_flag = int(self.user_input_data['diameter_bin_flag'])
+        except KeyError:
+            logger.error('diameter_bin_flag missing from input file. #1 for using diameter bins and 0 for no diameter bins. Defaulting to 0 .')
+            diameter_bin_flag = 0
         num_x_bins = self.particle_bin_domain.num_x_bins
         num_y_bins = self.particle_bin_domain.num_y_bins
         smd = np.zeros((num_x_bins, num_y_bins))
-        smd_calculator_factory = particle_statistics.SauterMeanDiameterCalculatorFactory(bin_flag)
+        smd_calculator_factory = particle_statistics.SauterMeanDiameterCalculatorFactory(diameter_bin_flag)
         smd_calculator = smd_calculator_factory.get_sauter_mean_diameter_class()
         for i in range(num_x_bins):
             for j in range(num_y_bins):
                 smd[i][j] = smd_calculator.compute_sauter_mean_diameter(avg_pdf[i][j])
         return smd
 
-    def write_output(self, BinFlag, avg_pdf):
+    def write_output(self, avg_pdf):
         logger.info("Writing Output Data")
 
         #Create output directory and enter the directory
@@ -344,9 +354,9 @@ class LagrangianParticleSMDDataAnalyzer(LagrangianParticleDataAnalyzer):
         else:
             os.chdir(output_dir)
         
-        self.write_smd_data()
+        self.write_smd_data(avg_pdf)
 
-    def write_smd_data(self):
+    def write_smd_data(self, avg_pdf):
         try:
             case_name = self.user_input_data['case_name']
         except KeyError:
@@ -363,17 +373,18 @@ class LagrangianParticleSMDDataAnalyzer(LagrangianParticleDataAnalyzer):
         pdf_y_coords = self.particle_bin_domain.compute_y_bin_center_coords()
         num_x_bins = self.particle_bin_domain.num_x_bins
         num_y_bins = self.particle_bin_domain.num_y_bins
-        smd = self.compute_sauter_mean_diameter(avg_pdf, BinFlag)
+        smd = self.compute_sauter_mean_diameter(avg_pdf)
         for m in range(0, num_y_bins):
             output_file_name = case_name + "_SMD_" + '%s_%4.2f_Data'%('Y', pdf_y_coords[m] / d_liq) + ".txt"
             f_output = open(output_file_name,"w")
+            f_output.write("X(m)\tSauter Mean Diameter(micrometers)\n")
             for k in range(0, num_x_bins):
                 f_output.write("%10.6E\t"%(pdf_x_coords[k]))
                 f_output.write("%10.6E\t"%(smd[k][m]))
                 f_output.write("\n\n")
             f_output.close()
 
-        self.write_smd_plots(smd_data)
+        self.write_smd_plots(smd)
 
     def write_smd_plots(self, smd_data):
         try:
@@ -446,50 +457,7 @@ class LagrangianParticlePDFDataAnalyzer(LagrangianParticleDataAnalyzer):
         self.particle_bin_domain.print_y_bin_coords(d_liq)
 
         #Initialize 3D array of objects to hold particle data for all bins in each data file. Creates NumFiles x nXBins x nYBins array
-        pdf_data = self.initialize_particle_data_structure() 
-        file_indices = self.get_file_indices()
-        for i, time_stamp in enumerate(file_indices):
-            #Read particle data from HDF5 data files
-            logger.info("Reading Data from file: %d"%(i + 1))
-            hdf5_data_reader = self.create_hdf5_reader(time_stamp)
-            particle_data = hdf5_data_reader.read_hdf_particle_data()
-            logger.info("Number of parcels in dataset %d :\t%d"%(i + 1, len(particle_data)))
-            
-            real_particle_data = self.convert_particle_data_to_floating_point(particle_data) 
-
-            #Store particle radius in the y and z positions of the data array
-            try:
-                radial_bin_flag = int(self.user_input_data['radial_bin_flag'])
-            except KeyError:
-                logger.error('radial_bin_flag missing from input file. 0 for cartesian y bins, 1 for cylindrical R bins. If 1, treats y variable as r in code. Defaulting to 0 .')
-                radial_bin_flag = 0
-            
-            if radial_bin_flag == 1:
-                for k in range(0, len(particle_data)):
-                    real_particle_data[k][2] = math.sqrt(real_particle_data[k][2]**2 + real_particle_data[k][3]**2)
-                    real_particle_data[k][3] = real_particle_data[k][2]
-
-            #Loop over all bins and store data about particles within the bin
-            x_bin_coords = self.particle_bin_domain.compute_x_bin_coords() 
-            y_bin_coords = self.particle_bin_domain.compute_y_bin_coords()
-            
-            #Loop over Y bins & sweep over the X bins and store particle information
-            logger.info("Counting Particles for File: %d"%(i + 1))
-            num_parcels = len(particle_data)
-            num_x_bins = self.particle_bin_domain.num_x_bins 
-            num_y_bins = self.particle_bin_domain.num_y_bins
-            for j in range(0, num_x_bins):
-                logger.info("Placing parcels into X-bin:\t%d"%(j + 1))
-                for k in range(0, num_y_bins):
-                    logger.info("\tPlacing parcels into Y-bin:\t%d"%(k + 1))
-                    parcels_in_bin = 0
-                    for m in range(0, num_parcels):  #Loop over all parcels to find which are in the current bin
-                        if real_particle_data[m][1] < x_bin_coords[1][j] and real_particle_data[m][1] >= x_bin_coords[0][j] and real_particle_data[m][2] < y_bin_coords[1][k] and real_particle_data[m][2] >= y_bin_coords[0][k]:
-                                #logger.debug("i = %d\tj = %d\tk = %d\n"%(i+1,m+1,k+1))
-                                pdf_data[i][j][k].add_data(particle_data[m][0], particle_data[m][4])
-                                parcels_in_bin += 1
-                    logger.info("\t\tNumber of Parcels in X Bin(%d) & Y Bin(%d) is:\t %d"%(j + 1, k + 1, parcels_in_bin))
-                    
+        pdf_data = self.read_data_and_place_parcels_into_spatial_bins() 
 
         self.inplace_sort_particle_data_by_diameter(pdf_data)
         avg_pdf = self.inplace_merge_particle_data_over_all_files(pdf_data)
@@ -567,7 +535,7 @@ class LagrangianParticlePDFDataAnalyzer(LagrangianParticleDataAnalyzer):
                     f_output.write("%10.6E\t"%( 0.5*(float(user_defined_bins[m]['d_min']) + float(user_defined_bins[m]['d_max']))))
                     for j in range(0, num_y_bins):   #used to be nYBins
                         #logger.debug("\tWriting data for Transverse bin ",j+1," located at: ",PDF_Y_Coords[j])
-                        f_output.write("%10.6E\t"%( float(avg_pdf[i][j].ParticlesPerParcel[m]) ))
+                        f_output.write("%10.6E\t"%( float(avg_pdf[i][j].parcels[m]['particles_per_parcel'])))
                     f_output.write("\n")
                     f_output.write("\n")
             f_output.close()

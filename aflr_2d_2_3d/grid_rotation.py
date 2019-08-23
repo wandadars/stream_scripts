@@ -43,6 +43,7 @@ class InputFileParser(object):
     	print('boundary_2: Name of boundary face that IS rotated on the pie slice')
     	print('initial_wedge_angle: Angle of initial provided pie-slice sector that was generated')
 
+
 def create_3d_grid(grid_base_name, boundary_1, boundary_2, initial_wedge_angle):
     """
     grid_base_name: Name of the grid i.e. <name>.vog
@@ -115,7 +116,6 @@ input_parser = InputFileParser(input_filename)
 #Note: When rotating using the aflr tool to make an axisymmetric pie slice, the boundaries are numbered
 #such that the original surface has the higher boundary marker number, and the newer surface that is
 #created from the rotation has the lower number.
-
 
 grid_base_name = input_parser.user_input_data['grid_base_name']
 boundary_1 = input_parser.user_input_data['boundary_1']

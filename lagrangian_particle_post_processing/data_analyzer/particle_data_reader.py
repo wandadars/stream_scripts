@@ -259,17 +259,13 @@ class HDF5ParticlePDFPlotterDataReader(HDF5ParticleDataReader):
 
         particle_data = []
         for i in range(0, self.num_parcels):
-            particle_data.append([])
-
-            particle_data[i].append(diameter_data[i])
-            particle_data[i].append(position_data[0][i])
-            particle_data[i].append(position_data[1][i])
-            particle_data[i].append(position_data[2][i])
-            particle_data[i].append(particles_per_parcel_data[i])
+            entry = {'diameter': diameter_data[i],
+                     'x': position_data[0][i],
+                     'y': position_data[1][i],
+                     'z': position_data[2][i],
+                     'particles_per_parcel': particles_per_parcel_data[i]}
+            particle_data.append(entry)
         return particle_data
-
-
-
 
 class VOFDataReader(object):
     def __init__(self, case_name, time_stamp, script_path):
