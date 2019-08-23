@@ -133,7 +133,7 @@ class ParticleBinCell:
             #CheckSum for error checking
             check_sum_1 = sum([float(parcel['particles_per_parcel']) for parcel in self.parcels])
 
-            self.parcels.sort(key = lambda parcel: parcel['particles_per_parcel'])
+            self.parcels.sort(key = lambda parcel: float(parcel['particles_per_parcel']))
 
             #CheckSum for error checking
             check_sum_2 = sum([float(parcel['particles_per_parcel']) for parcel in self.parcels])
@@ -238,14 +238,19 @@ class ParticleBinCell:
         Combine the data contained in two instances of the class into a new class
         """
         if len(other.parcels) > 0:  #Only add the new data if it actually exists
-            check_sum_1 = sum([float(this_parcel['particles_per_parcel']) + float(other_parcel['particles_per_parcel']) for this_parcel, other_parcel in zip(self.parcels, other.parcels)])
+            self.sort_particles_per_parcel()
+            other.sort_particles_per_parcel()
+            check_sum_1 = sum([float(parcel['particles_per_parcel']) for parcel in self.parcels] + [float(parcel['particles_per_parcel']) for parcel in other.parcels])
     
             new_parcels = self.parcels + other.parcels #concatenate the internal lists
             combined_data = ParticleBinCell(new_parcels)
+            combined_data.sort_particles_per_parcel()
 
             check_sum_2 = sum([float(parcel['particles_per_parcel']) for parcel in combined_data.parcels])
             if abs(check_sum_1 - check_sum_2) >= 1e-9:
                 logger.error("ERROR - Addition process has lost data! Discrepancy is: %10.6E"%(abs(check_sum_1 - check_sum_2)))
+                logger.error("Input Sum of particles_per_parcel: %10.6E"%(check_sum_1))
+                logger.error("Output Sum of particles_per_parcel: %10.6E"%(check_sum_2))
         else:
             combined_data = ParticleBinCell(self.parcels)
 
