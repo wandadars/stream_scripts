@@ -157,6 +157,11 @@ class FFTUnitTester():
         pass
 
     def run_unit_tests(self):
+        self.unit_test_1()
+        self.unit_test_2()
+        self.unit_test_3()
+
+    def unit_test_1(self):
         #Unit test for FFT
         t = np.linspace(0, 2*np.pi, 1000, endpoint=True)
         f = 3.0
@@ -170,10 +175,29 @@ class FFTUnitTester():
             data[i][0] = time
             data[i][1] = sine
 
-        self.test_power_spectrum(data)
+        self.test_power_spectrum(data, [0,10], 'fft_unittest_1')
+
+
+    def unit_test_2(self):
+        #Unit test 2 for FFT
+        t = np.linspace(0, 0.5, 1000, endpoint=True)
+        f1 = 40
+        f2 = 90
+        hann = np.hanning(len(t))
+        s = np.sin(f1 * 2 * np.pi * t) + 0.5 * np.sin(f2 * 2 * np.pi * t) 
+        #s = s*hann
+        data = np.zeros((t.size, 2))
+
+        for i, (time, sine) in enumerate(zip(t, s)):
+            data[i][0] = time
+            data[i][1] = sine
+        
+        self.test_power_spectrum(data, [0,100], 'fft_unittest_2')
+    
+    def unit_test_3(self):
         self.test_lowpass_filter()
 
-    def test_power_spectrum(self, data):
+    def test_power_spectrum(self, data, window_range, output_name):
         time = []
         pressure = []
         time = data[:,0]
@@ -193,7 +217,8 @@ class FFTUnitTester():
         ax.plot(tf, 2*np.abs(pf[:N])/N)
         ax.set_xlabel('Frequency ($Hz$)')
         plt.grid()
-        plt.savefig('fft_unittest.png')
+        ax.set_xlim(window_range)
+        plt.savefig(output_name +'.png')
 
     def test_lowpass_filter(self):
         order = 6
@@ -238,7 +263,9 @@ class FFTUnitTester():
 
 
 
-
+#Unit tests
+#unit_tester = FFTUnitTester()
+#unit_tester.run_unit_tests()
 
 
 #--------------Main----------------
