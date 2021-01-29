@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+import csv
 import os 
 import math
 import random
@@ -139,6 +140,27 @@ def plot_force_power_spectrum(data_store, output_name, force_component):
     ax.xaxis.set_major_locator(ticker.MultipleLocator(tick_spacing))
     #plt.grid()
     plt.savefig(output_name + '_' + str(force_component) + '_fft' + '.png')
+    
+    #Quick print of dominant frequency
+    power_levels = np.abs(pf[:N])
+    max_loc = 0
+    max_power = 0
+    for i, power in enumerate(power_levels):
+        if power >= max_power:
+            max_power = power
+            max_loc = i
+    
+    print('For force component: ' + str(force_component))
+    print('Maximum power of {0:10.6f} located at frequency: {1:10.6f}'.format(max_power, tf[max_loc]))
+
+    #Write CSV file
+    with open(output_name + '_' + str(force_component) + '.csv', mode='w') as output_file:
+        output_writer = csv.writer(output_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+        for i, power in enumerate(power_levels):
+            frequency_formatted = '{0:10.6f}'.format(tf[i])
+            power_formatted = '{0:>10.6f}'.format(power)
+            line = [frequency_formatted, power_formatted]
+            output_writer.writerow(line)
 
 def butter_lowpass(cutoff, fs, order=5):
     nyq = 0.5 * fs
@@ -260,7 +282,7 @@ class FFTUnitTester():
 
         plt.subplots_adjust(hspace=0.35)
         plt.savefig('filtered_test_data.png')
-
+    
 
 
 #Unit tests
