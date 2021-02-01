@@ -3,6 +3,8 @@ import csv
 import os 
 import math
 import random
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.fftpack import fft
@@ -37,14 +39,14 @@ def test_for_file(file_name):
     try:
       os.path.isfile(file_name)
     except IOError as e:
-      print "I/O error({0}): {1}".format(e.errno, e.strerror)
+      print('I/O error({0}): {1}'.format(e.errno, e.strerror))
       raise
 
     non_blank_count = count_lines_of_data(file_name)
     try:
       f = open(file_name,"r")
     except IOError as e:
-      print "I/O error({0}): {1}".format(e.errno, e.strerror)
+      print('I/O error({0}): {1}'.format(e.errno, e.strerror))
       raise
 
     return f, non_blank_count
