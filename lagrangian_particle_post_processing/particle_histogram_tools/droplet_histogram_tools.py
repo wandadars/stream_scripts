@@ -289,9 +289,8 @@ class particle_histogram:
         #Provide a uniform scaling of the values in the horizontal bins array
         for i in range(0,self.num_bins):
             self.horizontal_bins[i] = self.horizontal_bins[i]*scaling_factor
-
-    #Update widths based on new bin values
-    self.compute_widths()
+        #Update widths based on new bin values
+        self.compute_widths()
 
 
     def plot_histogram(self):

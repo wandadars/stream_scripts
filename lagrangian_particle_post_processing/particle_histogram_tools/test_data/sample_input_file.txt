@@ -1,0 +1,39 @@
+#Experimental Data Set
+ExpInputFileName AcF3_xD10_DropDis.dat
+ExpFilePathBase /home/neal/codes/stream_scripts/lagrangian_particle_post_processing/particle_histogram_tools/test_data 
+ExpOutputFileName AcF3_xD0.3_DropDis_MassWeightedLogFit_test #User changes this
+
+
+#Simulation Data set
+SimInputFileName acetone_PDF_XOverD_10.00_Data.txt
+SimFilePathBase /home/neal/codes/stream_scripts/lagrangian_particle_post_processing/particle_histogram_tools/test_data 
+
+OutputFileName  acetone_PDF_XOverD_10_MassWeightedLogFit_comparison #User changes this
+
+
+#Debug flag
+DebugFlag  0   #0 for off, 1 for on
+WeibullPlotFlag  0  #1 to fit data to Weibull distribution and show on plots, 0 to leave out
+
+#Flag for averaging the PDF over all radii
+RadiusAverageFlag  1   # 0 - only take first value, 1 - average over all radial PDFs in data file
+
+#Provide the density of the liquid for converting number weighted droplet diameter PDFs to mass weighted droplet mass PDF.
+MassWeightedFlag  1    # 0 for using the original diameter data, 1 for converting to mass weighted PDF
+
+#Output options
+PlotImageFormat png
+PlotResolution  500  #Desired dpi of plot
+
+
+#Factor required to convert diameter data in experimental data file to fundamental unit e.g. if file 
+#has diameters listed in terms of micrometers, then the factor needs to be 1e-6 to convert back to meters.
+#This is necessary for the section that computes the mass of the particles
+ExpDiameterConversionFactor = 1.0e-6   #For experimental dataset
+SimDiameterConversionFactor = 1.0   #For simulation dataset 
+
+ExpDiameterPlotFactor = 1.0e6 #Factor for scaling the horizontal axis of diameter - for experimental data
+SimDiameterPlotFactor = 1.0e6  #Factor
+
+
+

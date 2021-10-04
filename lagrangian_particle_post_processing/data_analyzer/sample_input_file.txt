@@ -1,0 +1,26 @@
+#This is an example script used to process acetone droplet data from the Gounder 2012 paper.
+
+mode pdf  #PDF or SMD
+
+diameter_bin_flag  1 # Use 1 for diamter bins, or 0 for no diameter bins
+d_min  0.0
+d_max  120e-6
+num_dia_bins  120
+radial_bin_flag  1 # 0 for cartesian y bins, 1 for cylindrical R bins. If 1, treat y variable as R in code
+d_liq  0.0105
+i_start  8000
+i_step 100
+i_end 21000
+
+num_x_bins  7
+x_min  0.0
+x_max  0.3675
+
+num_y_bins  10
+y_min 0.0
+y_max  10.5e-3
+
+script_path  /home/neal/codes/stream_scripts/lagrangian_particle_post_processing/data_analyzer
+case_name  acetone
+
+
