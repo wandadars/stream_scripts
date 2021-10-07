@@ -1,8 +1,6 @@
 #Experimental Data Set
 ExpInputFileName AcF3_xD10_DropDis.dat
 ExpFilePathBase /home/neal/codes/stream_scripts/lagrangian_particle_post_processing/particle_histogram_tools/test_data 
-ExpOutputFileName AcF3_xD0.3_DropDis_MassWeightedLogFit_test #User changes this
-
 
 #Simulation Data set
 SimInputFileName acetone_PDF_XOverD_10.00_Data.txt
