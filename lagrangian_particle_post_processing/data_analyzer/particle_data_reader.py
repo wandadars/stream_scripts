@@ -75,7 +75,7 @@ class HDF5ParticleDataReader(object):
             f = open('tempPythonFile.txt','r')
         except IOError as e:
             logger.error("Unable to open file") #Does not exist OR no read permissions
-            raise IOError
+            raise 
 
         logger.info("Storing parcel coordinate data from file: %s"%(file_name))
         #Store data in a 3xN list

@@ -12,11 +12,13 @@ class Main(object):
         self.setup_logger()
     
     def setup_logger(self):
-        logging.basicConfig(format='%(asctime)s %(name)-12s %(levelname)-8s: %(message)s', datefmt='%m/%d/%Y %H:%M %p', filename='out.log', filemode='w', level=logging.DEBUG)
+        desired_logging_level = logging.INFO
+
+        logging.basicConfig(format='%(asctime)s %(name)-12s %(levelname)-8s: %(message)s', datefmt='%m/%d/%Y %H:%M %p', filename='out.log', filemode='w', level=desired_logging_level)
 
         #For console output from logging
         console = logging.StreamHandler()
-        console.setLevel(logging.DEBUG)
+        console.setLevel(desired_logging_level)
         formatter = logging.Formatter('%(name)-12s: %(levelname)-8s %(message)s')
         console.setFormatter(formatter)
         logging.getLogger('').addHandler(console)
