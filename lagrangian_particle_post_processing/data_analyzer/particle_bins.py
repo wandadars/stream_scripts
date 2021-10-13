@@ -218,7 +218,7 @@ class ParticleBinCell:
             for j, dia_bin in enumerate(custom_diameter_bins):
                 if (float(parcel['diameter']) >= float(dia_bin['d_min'])) and (float(parcel['diameter']) < float(dia_bin['d_max'])):
                     new_parcels[j]['particles_per_parcel'] = str(float(new_parcels[j]['particles_per_parcel']) + float(parcel['particles_per_parcel'])) 
-                    logger.debug("L: %10.6E \t R: %10.6E \t %s \t %s\n"%(float(dia_bin['d_min']), float(dia_bin['d_max']), parcel['diameter'], parcel['particles_per_parcel']))
+                    logger.debug("L: %10.6E \t R: %10.6E \t D: %s \t PPC: %s"%(float(dia_bin['d_min']), float(dia_bin['d_max']), parcel['diameter'], parcel['particles_per_parcel']))
                     found = True #Value has been placed into the new bin structure
                     break
 

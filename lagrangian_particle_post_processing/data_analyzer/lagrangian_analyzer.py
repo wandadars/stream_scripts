@@ -46,19 +46,19 @@ class LagrangianParticleDataAnalyzer(object):
             i_start = int(self.user_input_data['i_start'])
         except KeyError:
             logger.error('i_start missing from input file. Needed for reading time series of files.')
-            raise KeyError
+            raise 
         
         try:
             i_end = int(self.user_input_data['i_end'])
         except KeyError:
             logger.error('i_end missing from input file. Needed for reading time series of files.')
-            raise KeyError
+            raise 
         
         try:
             i_step = int(self.user_input_data['i_step'])
         except KeyError:
             logger.error('i_step missing from input file. Needed for reading time series of files.')
-            raise KeyError
+            raise 
 
         return utilities.compute_filename_numbers(i_start, i_end, i_step)
 
@@ -67,60 +67,57 @@ class LagrangianParticleDataAnalyzer(object):
             x_min = float(self.user_input_data['x_min'])
         except KeyError:
             logger.error('x_min missing from input file. Needed to define x range for bins.')
-            raise KeyError
+            raise 
         
         try:
             x_max = float(self.user_input_data['x_max'])
         except KeyError:
             logger.error('x_max missing from input file. Needed to define x range for bins.')
-            raise KeyError
+            raise 
         
         try:
             num_x_bins = int(self.user_input_data['num_x_bins'])
         except KeyError:
             logger.error('num_x_bins missing from input file. Needed to define x range for bins.')
-            raise KeyError
+            raise 
         
         try:
             y_min = float(self.user_input_data['y_min'])
         except KeyError:
             logger.error('y_min missing from input file. Needed to define y range for bins.')
-            raise KeyError
+            raise 
         
         try:
             y_max = float(self.user_input_data['y_max'])
         except KeyError:
             logger.error('y_max missing from input file. Needed to define y range for bins.')
-            raise KeyError
+            raise 
         
         try:
             num_y_bins = int(self.user_input_data['num_y_bins'])
         except KeyError:
             logger.error('num_y_bins missing from input file. Needed to define y range for bins.')
-            raise KeyError
+            raise 
 
         return particle_bins.ParticleBinDomain(x_max, x_min, y_max, y_min, num_x_bins, num_y_bins)
 
     def create_hdf5_reader(self, time_stamp):
         try:
-            script_path = self.user_input_data['script_path']
-        except KeyError:
-            logger.error('script_path missing from input file. Just a reference to the location of this script on the system(full path).')
-            raise KeyError
-
-        try:
             case_name = self.user_input_data['case_name']
         except KeyError:
             logger.error('case_name missing from input file. The prefix on the lagrangian files that signify the case name that generated them.')
-            raise KeyError
+            raise 
         
-        return particle_data_reader.HDF5ParticlePDFPlotterDataReader(case_name, time_stamp, script_path)
+        return particle_data_reader.HDF5ParticlePDFPlotterDataReader(case_name, time_stamp)
 
     def initialize_particle_data_structure(self):
+        """Initialize 3D array of objects to hold particle data for all bins in each data file. 
+        
+        Creates NumFiles x nXBins x nYBins array
+        """
         file_indices = self.get_file_indices()
         num_x_bins = self.particle_bin_domain.num_x_bins
         num_y_bins = self.particle_bin_domain.num_y_bins
-        #Initialize 3D array of objects to hold particle data for all bins in each data file. Creates NumFiles x nXBins x nYBins array
         data = [[[particle_bins.ParticleBinCell() for k in range(num_y_bins)] for j in range(num_x_bins)] for i in range(len(file_indices))]
         """
         #Check to make sure data structure is initialized correctly
@@ -431,7 +428,7 @@ class LagrangianParticleSMDDataAnalyzer(LagrangianParticleDataAnalyzer):
             plt.ylim([min_val, max_val])
 
             output_file_name = case_name + "_SMD_" + '%s%4.2f'%('Y',pdf_y_coords[m] / d_liq) + ".png"
-            logger.info("Saving a figure to:%s\n"%(output_file_name))
+            logger.info("Saving a figure to:%s"%(output_file_name))
             plt.savefig(output_file_name, bbox_inches='tight')
             plt.close()
 
@@ -601,7 +598,7 @@ class LagrangianParticlePDFDataAnalyzer(LagrangianParticleDataAnalyzer):
                     dimension_name = 'Y'
 
                 outputFileName = case_name + '_PDF_' + '%s%4.2f%s'%('XoverD', pdf_x_coords[i] / d_liq,'_') + '%soverD%4.2f'%(dimension_name, pdf_y_coords[j] / d_liq) + ".png"
-                logger.info("Saving a figure to:%s\n"%(outputFileName))
+                logger.info("Saving a figure to:%s"%(outputFileName))
                 plt.savefig(outputFileName, bbox_inches='tight')
                 plt.close()
 

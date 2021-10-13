@@ -56,9 +56,6 @@ if __name__ == '__main__':
     iEnd = arguments['stop']
     CaseName = arguments['case']
 
-    #For calling the h5dump shell script
-    ShellScriptPath = os.path.dirname(os.path.abspath(__file__))
-
     #Compute and store data filename numbers
     NumFiles = (iEnd-iStart)/iStep
     file_indices = []
@@ -84,7 +81,7 @@ if __name__ == '__main__':
     for i in range(0,NumFiles):
         #Read particle data from HDF5 data files
         print("Reading Data from file: %d"%(i+1))
-        hdf5_reader = particle_data_reader.HDF5ParticlePropertyPlotterDataReader(CaseName, file_indices[i], ShellScriptPath)
+        hdf5_reader = particle_data_reader.HDF5ParticlePropertyPlotterDataReader(CaseName, file_indices[i])
         ParticleData = hdf5_reader.read_hdf_particle_data()
         
         print(ParticleData)
@@ -152,7 +149,7 @@ if __name__ == '__main__':
     plt.ylim([MinVal, MaxVal])
 
     outputFileName = CaseName + '_temperature_history'+".png"
-    print("Saving a figure to:%s\n"%(outputFileName))
+    print("Saving a figure to:%s"%(outputFileName))
     plt.savefig(outputFileName, bbox_inches='tight')
     plt.close()
 

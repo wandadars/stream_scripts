@@ -12,7 +12,7 @@ class Main(object):
         self.setup_logger()
     
     def setup_logger(self):
-        desired_logging_level = logging.INFO
+        desired_logging_level = logging.DEBUG
 
         logging.basicConfig(format='%(asctime)s %(name)-12s %(levelname)-8s: %(message)s', datefmt='%m/%d/%Y %H:%M %p', filename='out.log', filemode='w', level=desired_logging_level)
 
