@@ -171,30 +171,17 @@ class LagrangianParticleDataAnalyzer(object):
                     logger.info("\tPlacing parcels into Y-bin:\t%d"%(k + 1))
                     parcels_in_bin = 0
                     for parcel in particle_data:  #Loop over all parcels to find which are in the current bin
-                        parcel_x = float(parcel['x'])
+                        parcel_x = parcel['x']
                         if radial_bin_flag == 1:
-                            parcel_y = math.sqrt(float(parcel['y'])**2 + float(parcel['z'])**2)
+                            parcel_y = math.sqrt(parcel['y']**2 + parcel['z']**2)
                         else:
-                            parcel_y = float(parcel['y'])
+                            parcel_y = parcel['y']
                         if parcel_x < x_bin_coords[1][j] and parcel_x >= x_bin_coords[0][j] and parcel_y < y_bin_coords[1][k] and parcel_y >= y_bin_coords[0][k]:
                             #logger.debug("i = %d\tj = %d\tk = %d\n"%(i+1,m+1,k+1))
                             spatially_binned_parcels[i][j][k].add_data(parcel['diameter'], parcel['particles_per_parcel'])
                             parcels_in_bin += 1
                     logger.info("\t\tNumber of Parcels in X Bin(%d) & Y Bin(%d) is:\t %d"%(j + 1, k + 1, parcels_in_bin))
         return spatially_binned_parcels      
-
-    def convert_particle_data_to_floating_point(self, particle_data):
-        """
-        particle_data is a list of dictionary entries with each dict being data about
-        a particular particle.
-        """
-        real_particle_data = []  
-        for particle in particle_data:
-            entry = {}
-            for particle_property in particle: #dict key loop
-                entry[particle_property] = float(particle[particle_property])
-            real_particle_data.append(entry) 
-        return real_particle_data
 
     def remap_particle_diameters_to_custom_bins(self, particle_data):
         logger.info("Re-Mapping Particle Diameter data to user-defined bins")
@@ -207,8 +194,8 @@ class LagrangianParticleDataAnalyzer(object):
                 particle_data[i][j].sort_diameters()
 
     def inplace_sort_particle_data_by_diameter(self, particle_data):
+        """Sort diameter data in the data structure to speed up the merging process."""
         logger.info("Performing a Sort on the particle diameter data to improve performance")
-        #Sort diameter data in the data structure to speed up the merging process
         num_files = len(particle_data)
         num_x_bins = self.particle_bin_domain.num_x_bins 
         num_y_bins = self.particle_bin_domain.num_y_bins 
@@ -219,25 +206,12 @@ class LagrangianParticleDataAnalyzer(object):
                     logger.info("\tSorting Y Bin: %d"%(k + 1))
                     particle_data[i][j][k].sort_diameters()
     
-    def inplace_compression_of_particle_data(self, particle_data):
-        logger.info("Performing a compression on the particle diameter data to improve performance")
-        #Sort diameter data in the data structure to speed up the merging process
-        num_files = len(particle_data)
-        num_x_bins = self.particle_bin_domain.num_x_bins 
-        num_y_bins = self.particle_bin_domain.num_y_bins 
-        for i in range(0, num_files):
-            for j in range(0, num_x_bins):
-                logger.info("\nSorting X Bin: %d"%(j + 1))
-                for k in range(0, num_y_bins):
-                    logger.info("\tSorting Y Bin: %d"%(k + 1))
-                    particle_data[i][j][k].compress_data()
-    
     def inplace_merge_particle_data_over_all_files(self, particle_data):
+        """Compute a time averaged PDF by averaging over all time entries"""
         logger.info("Merging data over all files")
         num_files = len(particle_data)
         num_x_bins = self.particle_bin_domain.num_x_bins 
         num_y_bins = self.particle_bin_domain.num_y_bins
-        #Compute a time averaged PDF by averaging over all time entries
         avg = [[particle_bins.ParticleBinCell() for j in range(num_y_bins) ]for i in range(num_x_bins)]
         for i in range(0, num_files):
             logger.info("Merging Data from File: %d"%(i + 1))
@@ -249,7 +223,7 @@ class LagrangianParticleDataAnalyzer(object):
                         avg[j][k] = particle_data[i][j][k]
                     else:
                         avg[j][k] =  avg[j][k] + particle_data[i][j][k]
-                        #Sort and compress the new output
+                        #Sort the new output
                         avg[j][k].sort_diameters()
             logger.info("Data file %d successfully merged\n"%(i+1))
         #Debugging 
@@ -282,11 +256,11 @@ class LagrangianParticleDataAnalyzer(object):
         delta_d = float(d_max - d_min) / float(num_dia_bins)
         logger.info("Using diameter bin width of: %10.6E"%(delta_d))
         logger.info("Bin #\t\tLeft Bin Coord\t\tRight Bin Coord")
-        user_defined_bins = [{'d_min': str(d_min), 'd_max': str(d_min + delta_d)}]
+        user_defined_bins = [{'d_min': d_min, 'd_max': d_min + delta_d}]
         for i in range(0, num_dia_bins):
-            entry = {'d_min': user_defined_bins[-1]['d_max'], 'd_max': str(float(user_defined_bins[-1]['d_max']) + delta_d)}
+            entry = {'d_min': user_defined_bins[-1]['d_max'], 'd_max': user_defined_bins[-1]['d_max'] + delta_d}
             user_defined_bins.append(entry)
-            logger.info("%d\t\t%s\t\t\t%s"%(i + 1, user_defined_bins[i]['d_min'], user_defined_bins[i]['d_max']))
+            logger.info("%d\t\t%f\t\t\t%f"%(i + 1, user_defined_bins[i]['d_min'], user_defined_bins[i]['d_max']))
         return user_defined_bins
 
 
@@ -309,7 +283,6 @@ class LagrangianParticleSMDDataAnalyzer(LagrangianParticleDataAnalyzer):
         pdf_data = self.read_data_and_place_parcels_into_spatial_bins()
         
         self.inplace_sort_particle_data_by_diameter(pdf_data)
-        self.inplace_compression_of_particle_data(pdf_data)
         avg_pdf = self.inplace_merge_particle_data_over_all_files(pdf_data)
         
         try:
@@ -529,10 +502,10 @@ class LagrangianParticlePDFDataAnalyzer(LagrangianParticleDataAnalyzer):
                 user_defined_bins = self.compute_user_defined_bins()
                 num_y_bins = self.particle_bin_domain.num_y_bins
                 for m in range(0, num_dia_bins):
-                    f_output.write("%10.6E\t"%( 0.5*(float(user_defined_bins[m]['d_min']) + float(user_defined_bins[m]['d_max']))))
+                    f_output.write("%10.6E\t"%( 0.5*(user_defined_bins[m]['d_min'] + user_defined_bins[m]['d_max'])))
                     for j in range(0, num_y_bins):   #used to be nYBins
                         #logger.debug("\tWriting data for Transverse bin ",j+1," located at: ",PDF_Y_Coords[j])
-                        f_output.write("%10.6E\t"%( float(avg_pdf[i][j].parcels[m]['particles_per_parcel'])))
+                        f_output.write("%10.6E\t"%(avg_pdf[i][j].parcels[m]['particles_per_parcel']))
                     f_output.write("\n")
                     f_output.write("\n")
             f_output.close()
@@ -564,12 +537,12 @@ class LagrangianParticlePDFDataAnalyzer(LagrangianParticleDataAnalyzer):
                 MinVal = 0
                 for k, parcel in enumerate(avg_pdf[i][j].parcels):
                     if k == 0:
-                        MaxVal = float(parcel['particles_per_parcel'])
-                        MinVal = float(parcel['particles_per_parcel'])
-                    elif float(parcel['particles_per_parcel']) > MaxVal:
-                        MaxVal = float(parcel['particles_per_parcel'])
-                    elif float(parcel['particles_per_parcel']) < MinVal:
-                        MinVal = float(parcel['particles_per_parcel'])
+                        MaxVal = parcel['particles_per_parcel']
+                        MinVal = parcel['particles_per_parcel']
+                    elif parcel['particles_per_parcel'] > MaxVal:
+                        MaxVal = parcel['particles_per_parcel']
+                    elif parcel['particles_per_parcel'] < MinVal:
+                        MinVal = parcel['particles_per_parcel']
                         
                 #Change the min and max values a little bit so that all data lies within the bounds of the plots
                 MaxVal = MaxVal + 0.05*abs(MaxVal)
@@ -577,7 +550,7 @@ class LagrangianParticlePDFDataAnalyzer(LagrangianParticleDataAnalyzer):
 
                 xValues = np.asarray([parcel['diameter'] for parcel in avg_pdf[i][j].parcels])
                 for m in range(0, avg_pdf[i][j].num_parcels):
-                    xValues[m] = float(xValues[m]) * float(DiameterFactor)
+                    xValues[m] = xValues[m] * DiameterFactor
                 
                 yValues = np.asarray([parcel['particles_per_parcel'] for parcel in avg_pdf[i][j].parcels])
 

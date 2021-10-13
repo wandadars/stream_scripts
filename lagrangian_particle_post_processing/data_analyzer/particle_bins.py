@@ -94,9 +94,13 @@ class ParticleBinDomain:
 
 
 class ParticleBinCell:
-    """A class to combine methods to adding to and combining data sets that contain information about particles in a bin"""
+    """A representation of a single spatial bin
+    
+    The fundamental information about a bin cell is simply the parcels that are contained within in. The class
+    holds a list of parcel objects, and has methods to perform operations on this list of parcels.
+    """
     def __init__(self, parcels=None):
-        self.parcels = [] if parcels is None else parcels[:] #List of dictionaries with string keys and string values
+        self.parcels = [] if parcels is None else parcels[:] #List of dictionaries with string keys and float values
         self.num_parcels = len(self.parcels)
 
     def add_data(self, diameter, particles_per_parcel):
@@ -109,21 +113,21 @@ class ParticleBinCell:
         logger.info("Data set has %d elements."%(self.num_parcels))
         logger.info('Diameter  ->  Particles Per Parcel')
         for i in range(0, self.num_parcels):
-            logger.info("%10.6E\t%10.6E"%(float(self.parcels[i]['diameter']), float(self.parcels[i]['particles_per_parcel'])))
+            logger.info("%10.6E\t%10.6E"%(self.parcels[i]['diameter'], self.parcels[i]['particles_per_parcel']))
 
     def sort_diameters(self):
         if self.num_parcels > 0: #Only sort if there are actually any elements to sort
             #CheckSum for error checking
             check_sum_1 = 0.0
             for parcel in self.parcels:
-                check_sum_1 += float(parcel['particles_per_parcel'])
+                check_sum_1 += parcel['particles_per_parcel']
 
             self.parcels.sort(key = lambda parcel: parcel['diameter'])
 
             #CheckSum for error checking
             check_sum_2 = 0.0
             for parcel in self.parcels:
-                check_sum_2 += float(parcel['particles_per_parcel'])
+                check_sum_2 += parcel['particles_per_parcel']
 
             if abs(check_sum_1 - check_sum_2) >= 1e-6:
                 logger.error("ERROR - Sorting process has lost data!")
@@ -131,67 +135,14 @@ class ParticleBinCell:
     def sort_particles_per_parcel(self):
         if self.num_parcels > 0: #Only sort if there are actually any elements to sort
             #CheckSum for error checking
-            check_sum_1 = sum([float(parcel['particles_per_parcel']) for parcel in self.parcels])
+            check_sum_1 = sum([parcel['particles_per_parcel'] for parcel in self.parcels])
 
-            self.parcels.sort(key = lambda parcel: float(parcel['particles_per_parcel']))
+            self.parcels.sort(key = lambda parcel: parcel['particles_per_parcel'])
 
             #CheckSum for error checking
-            check_sum_2 = sum([float(parcel['particles_per_parcel']) for parcel in self.parcels])
+            check_sum_2 = sum([parcel['particles_per_parcel'] for parcel in self.parcels])
             if abs(check_sum_1 - check_sum_2) >= 1e-7:
                 logger.error("ERROR - Sorting by parcels process has lost data!")
-
-    def compress_data(self):
-        """
-        Combine repeated entries of diameters in the list to shorten the list length.
-        Assumes that the parcel list is sorted according to increasing diameters.
-        """
-        if self.num_parcels > 0: 
-            check_sum_1 = sum([float(parcel['particles_per_parcel']) for parcel in self.parcels])
-
-            #Timing
-            start_time = time.clock()
-
-            new_parcel_list = []
-            i = 0
-            while i < self.num_parcels:
-                if i == self.num_parcels - 1:
-                    #At end of data set, there is nothing after this, so no more repeats. Add to data set.
-                    new_parcel_list.append(self.parcels[i])
-                    i += 1
-                elif self.parcels[i]['diameter'] != self.parcels[i+1]['diameter']:
-                    new_parcel_list.append(self.parcels[i]) 
-                    i += 1
-                else:
-                    count = 1
-                    new_parcel_list.append(self.parcels[i]) 
-                    end = False
-                    while end == False:
-                        if i + count < self.num_parcels:
-                            if self.parcels[i+count]['diameter'] == self.parcels[i]['diameter']:
-                                new_parcel_list[-1]['particles_per_parcel'] = str(float(new_parcel_list[-1]['particles_per_parcel']) + float(self.parcels[i+count]['particles_per_parcel']))
-                                count += 1
-                            else:
-                                end = True
-                        else:
-                            end=True                        
-                    i += count #Push index of array to position after the section that had repeated entries
-
-            end_time = time.clock()
-    
-            #For compression metric
-            starting_size = len(self.parcels)
-            ending_size = len(new_parcel_list)
-            
-            self.parcels = new_parcel_list
-            self.num_parcels = len(new_parcel_list) 
-
-            check_sum_2 = sum([float(parcel['particles_per_parcel']) for parcel in self.parcels])
-            if abs(check_sum_1 - check_sum_2) >= 1e-6:
-                logger.error("ERROR - Compression process has lost data!")
-            else:
-                logger.info("Compression efficiency: %4.3f"%(starting_size / ending_size))
-                logger.info("Compression time: %4.3f"%(start_time - end_time))
-
 
     def custom_bins(self, custom_diameter_bins):
         """
@@ -202,13 +153,13 @@ class ParticleBinCell:
             custom_diameter_bins: list of dictionaries with keys 'd_min' and 'd_max'. List is assumed to be sorted
                                   by increasing values of 'd_min'. And values are strings.
         """ 
-        check_sum_1 = sum([float(parcel['particles_per_parcel']) for parcel in self.parcels])
+        check_sum_1 = sum([parcel['particles_per_parcel'] for parcel in self.parcels])
         #Create new lists for holding data
         new_parcels = []
         for i, dia_bin in enumerate(custom_diameter_bins):
             #Store the center values of the bins
-            entry = {'diameter':str(0.5*(float(custom_diameter_bins[i]['d_min']) + float(custom_diameter_bins[i]['d_max']))),
-                     'particles_per_parcel': str(0)}
+            entry = {'diameter': 0.5*(custom_diameter_bins[i]['d_min'] + custom_diameter_bins[i]['d_max']),
+                     'particles_per_parcel': 0}
             new_parcels.append(entry) 
 
         #sort into the new bins
@@ -216,19 +167,19 @@ class ParticleBinCell:
             #Find out which bin the ith diameter belongs in
             found = False #Flag for marking if the particular value falls into one of the provided bins
             for j, dia_bin in enumerate(custom_diameter_bins):
-                if (float(parcel['diameter']) >= float(dia_bin['d_min'])) and (float(parcel['diameter']) < float(dia_bin['d_max'])):
-                    new_parcels[j]['particles_per_parcel'] = str(float(new_parcels[j]['particles_per_parcel']) + float(parcel['particles_per_parcel'])) 
-                    logger.debug("L: %10.6E \t R: %10.6E \t D: %s \t PPC: %s"%(float(dia_bin['d_min']), float(dia_bin['d_max']), parcel['diameter'], parcel['particles_per_parcel']))
+                if (parcel['diameter'] >= dia_bin['d_min']) and (parcel['diameter'] < dia_bin['d_max']):
+                    new_parcels[j]['particles_per_parcel'] = new_parcels[j]['particles_per_parcel'] + parcel['particles_per_parcel'] 
+                    logger.debug("L: %10.6E \t R: %10.6E \t D: %f \t PPC: %f"%(dia_bin['d_min'], dia_bin['d_max'], parcel['diameter'], parcel['particles_per_parcel']))
                     found = True #Value has been placed into the new bin structure
                     break
 
             if found == False:# A value in the original data set was not able to be placed into the bins
-                logger.warning("Warning: The value: %10.6E  in the original data set was unable to be placed into the user defined bins"%(float(parcel['diameter'])))
+                logger.warning("Warning: The value: %10.6E  in the original data set was unable to be placed into the user defined bins"%(parcel['diameter']))
 
         self.parcels = new_parcels
         self.num_parcels = len(new_parcels) 
 
-        check_sum_2 = sum([float(parcel['particles_per_parcel']) for parcel in self.parcels])
+        check_sum_2 = sum([parcel['particles_per_parcel'] for parcel in self.parcels])
         if abs(check_sum_1 - check_sum_2) >= 1e-6:
             logger.warning("Warning - Customizing Bins process has lost data, which may be due to existing data being outside of user-defined bin values")
             logger.warning("Magnitude of Error: %10.6E"%(abs(check_sum_1 - check_sum_2)))
@@ -240,13 +191,13 @@ class ParticleBinCell:
         if len(other.parcels) > 0:  #Only add the new data if it actually exists
             self.sort_particles_per_parcel()
             other.sort_particles_per_parcel()
-            check_sum_1 = sum([float(parcel['particles_per_parcel']) for parcel in self.parcels] + [float(parcel['particles_per_parcel']) for parcel in other.parcels])
+            check_sum_1 = sum([parcel['particles_per_parcel'] for parcel in self.parcels] + [parcel['particles_per_parcel'] for parcel in other.parcels])
     
             new_parcels = self.parcels + other.parcels #concatenate the internal lists
             combined_data = ParticleBinCell(new_parcels)
             combined_data.sort_particles_per_parcel()
 
-            check_sum_2 = sum([float(parcel['particles_per_parcel']) for parcel in combined_data.parcels])
+            check_sum_2 = sum([parcel['particles_per_parcel'] for parcel in combined_data.parcels])
             if abs(check_sum_1 - check_sum_2) >= 1e-9:
                 logger.error("ERROR - Addition process has lost data! Discrepancy is: %10.6E"%(abs(check_sum_1 - check_sum_2)))
                 logger.error("Input Sum of particles_per_parcel: %10.6E"%(check_sum_1))

@@ -55,8 +55,8 @@ class SauterMeanDiameterCalculatorNoBins(SauterMeanDiameterCalculator):
         numerator = 0
         denominator = 0
         for parcel in particle_bin_cell.parcels:
-            numerator += float(parcel['particles_per_parcel']) * (float(parcel['diameter'])**3)
-            denominator += float(parcel['particles_per_parcel']) * (float(parcel['diameter'])**2)
+            numerator += parcel['particles_per_parcel'] * parcel['diameter']**3
+            denominator += parcel['particles_per_parcel'] * parcel['diameter']**2
         
         smd = numerator/denominator
         return smd
@@ -110,7 +110,7 @@ class SauterMeanDiameterCalculatorDiameterBins(SauterMeanDiameterCalculator):
             smd = 0 
             return smd 
         
-        particle_diameters = [float(parcel['diameter']) for parcel in particle_bin_cell.parcels]
+        particle_diameters = [parcel['diameter'] for parcel in particle_bin_cell.parcels]
         logger.debug('Parcel Diameters')
         logger.debug(particle_diameters)
         diameter_bin_coords = self.compute_diameter_bins(particle_diameters)
@@ -120,7 +120,7 @@ class SauterMeanDiameterCalculatorDiameterBins(SauterMeanDiameterCalculator):
         dia_bin_counts = np.zeros(len(diameter_bin_coords))
         for parcel in particle_bin_cell.parcels:
             for i, dia_bin in enumerate(diameter_bin_coords):
-                if float(parcel['diameter'])  <= dia_bin['d_max'] and float(parcel['diameter']) >= dia_bin['d_min']:
+                if parcel['diameter']  <= dia_bin['d_max'] and parcel['diameter'] >= dia_bin['d_min']:
                     dia_bin_counts[i] += 1
     
         logger.debug("Bin Counts:")
