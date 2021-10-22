@@ -57,7 +57,7 @@ if __name__ == '__main__':
     CaseName = arguments['case']
 
     #Compute and store data filename numbers
-    NumFiles = (iEnd-iStart)/iStep
+    NumFiles = int((iEnd-iStart)/iStep)
     file_indices = []
     iIterate=iStart
     for i in range(0,NumFiles):   #make list of timestamps
@@ -85,13 +85,19 @@ if __name__ == '__main__':
         ParticleData = hdf5_reader.read_hdf_particle_data()
         
         print(ParticleData)
-        #Compute size of ParticleData 2D list
-        numrows = len(ParticleData)
-        numcols = len(ParticleData[0])
-        print("Number of parcels in dataset %d :\t%10.6E"%(i+1,numrows))
-        
-        particle_temperatures.append(ParticleData[0][1])
-        particle_diameters.append(ParticleData[0][0])
+        if len(ParticleData) == 0:
+            #Droplet is gone
+            print("Number of parcels in dataset %d :\t%10.6E"%(i+1,0))
+            particle_temperatures.append(0)
+            particle_diameters.append(0)
+        else:
+            #Compute size of ParticleData 2D list
+            numrows = len(ParticleData)
+            numcols = len(ParticleData[0])
+            print("Number of parcels in dataset %d :\t%10.6E"%(i+1,numrows))
+            
+            particle_temperatures.append(ParticleData[0][1])
+            particle_diameters.append(ParticleData[0][0])
 
 
     #print particle_temperatures
