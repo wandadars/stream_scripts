@@ -216,13 +216,6 @@ plt.xlim([0,max(max(ExpHorizontalBins*ExpDiameterPlotFactor),max(SimHorizontalBi
 plt.legend(loc='best',fontsize=7)
 plt.ylabel("PDF")
 
-plt.subplot(2,2,3)
-plt.bar(SimHorizontalBins*SimDiameterPlotFactor,Simpdf,Simwidth*SimDiameterPlotFactor, color='red',fill=True,label="Simulation Data PDF") 
-plt.ylim([0,max(max(Exppdf),max(Simpdf))])
-plt.xlim([0,max(max(ExpHorizontalBins*ExpDiameterPlotFactor),max(SimHorizontalBins*SimDiameterPlotFactor))])
-plt.legend(loc='best',fontsize=7)
-plt.ylabel("PDF")
-
 plt.xlabel("Diameter ($\mu$meters)")	
 
 plt.draw()
@@ -247,9 +240,9 @@ plt.bar(ExpHorizontalBins*ExpDiameterPlotFactor,Exppdf,Expwidth*ExpDiameterPlotF
 plt.step(SimHorizontalBins*SimDiameterPlotFactor,Simpdf, color='red',label="Simulation Data PDF") 
 plt.ylim([0,max(max(Exppdf),max(Simpdf))])
 plt.xlim([0,max(max(ExpHorizontalBins*ExpDiameterPlotFactor),max(SimHorizontalBins*SimDiameterPlotFactor))])
-plt.legend(loc='best',fontsize=7)
-plt.ylabel("PDF")
-plt.xlabel("Diameter ($\mu$meters)")
+plt.legend(loc='best',fontsize=16)
+plt.ylabel("PDF",fontsize=16)
+plt.xlabel("Diameter ($\mu$meters)",fontsize=16)
 plt.draw()
 
 outputFileName = OutputFileName + "_pdf_overlay"+"." + PlotImageFormat
