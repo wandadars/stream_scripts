@@ -68,32 +68,36 @@ print "Number of Volume Hexahedral Elements: ", num_hexs
 print "Skimming Node Data..."
 Done = False
 while Done == False:
-	lines = f.readline()
-	line = lines.rstrip()
-	line = line.split()
-	line_count = line_count + 1
-	if line_count > num_nodes : 
-		Done = True
+    lines = f.readline()
+    line = lines.rstrip()
+    line = line.split()
+    line_count = line_count + 1
+    if line_count > num_nodes : 
+        Done = True
 
 
-#loop over the connectivity data, but don't store
+#loop over the surface connectivity data, but don't store
 print "Skimming Connectivity Data..."
 while True:
-  lines = f.readline()
-  line = lines.rstrip()
-  line = line.split()
-  line_count = line_count + 1
-  if line_count > num_nodes + num_trias + num_quads:
-    break
+    lines = f.readline()
+    line = lines.rstrip()
+    line = line.split()
+    line_count = line_count + 1
+    if line_count > num_nodes + num_trias + num_quads:
+        break
 
 
 boundary_id_markers = []
 #loop over the node data, but don't store
 print "Collecting All Boundary Face Markers..."
+debug_counter = line_count
 while True:
   lines = f.readline()
   line = lines.rstrip()
   line = line.split()
+  print(line)
+  print(debug_counter)
+  debug_counter += 1
   if len(line) > 1:
     break
   boundary_id_markers.append(line[0])
